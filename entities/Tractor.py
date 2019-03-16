@@ -16,8 +16,8 @@ class Tractor(pygame.sprite.Sprite):
         self.set_rect(1, 1)
 
         # position in map matrix
-        self.index_x = int((self.rect.x - 32) / 32)
-        self.index_y = int((self.rect.y - 32) / 32)
+        self.__index_x = int((self.rect.x - 32) / 32)
+        self.__index_y = int((self.rect.y - 32) / 32)
 
         # 1 is needed because of additional lines between grid
         self.__step = 32 + 1
@@ -32,6 +32,12 @@ class Tractor(pygame.sprite.Sprite):
             "irrigation": self.__irrigate_level_in_storage,
             "fertilizer": self.__fertilize_level_in_storage
         }
+
+    def get_index_x(self):
+        return self.__index_x
+
+    def get_index_y(self):
+        return self.__index_y
 
     def get_irrigate_rate(self):
         return self.__irrigate_rate
@@ -58,10 +64,10 @@ class Tractor(pygame.sprite.Sprite):
     def update_position(self, step_x, step_y):
         if self.__check_if_update_position_possible(step_x, step_y):
             self.rect.x += step_x
-            self.index_x = int((self.rect.x - 32) / 32)
+            self.__index_x = int((self.rect.x - 32) / 32)
 
             self.rect.y += step_y
-            self.index_y = int((self.rect.y - 32) / 32)
+            self.__index_y = int((self.rect.y - 32) / 32)
 
     def __check_if_update_position_possible(self, step_x, step_y):
         return True if (self.rect.x + step_x >= 32) \

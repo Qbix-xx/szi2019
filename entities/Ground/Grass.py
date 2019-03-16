@@ -1,9 +1,9 @@
 import pygame
 
-from entities.Ground.HarvestableAbstract import HarvestableAbstract
+from entities.Ground.AbstractHarvestable import AbstractHarvestable
 
 
-class Grass(HarvestableAbstract):
+class Grass(AbstractHarvestable):
     def __init__(self, x, y):
         self.image = pygame.image.load("resources/sprites/grass.png")
         self.image = pygame.transform.scale(self.image, (32, 32))
