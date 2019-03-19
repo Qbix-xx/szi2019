@@ -23,7 +23,7 @@ mapLayoutFile = open("map_layouts/layout_15x15.txt", "r")
 # !!!!!!!!!! ( to be reworked, map needs to hold objects instead of numbers) !!!!!!!!!!!!
 for line in mapLayoutFile:
     x, y = map(int, line.strip().split())
-    Map[x][y] = 1 # some pycharm warning here, not sure why
+    Map[x][y] = 1  # some pycharm warning here, not sure why
 
 
 # screen handle
