@@ -83,6 +83,13 @@ class Engine:
         self.__render_ground_stats(hScreen)
         self.__render_tractor_storage_stats(hScreen)
 
+        # for ground in self.__ground_sprite_group:
+        #
+        # for object_in in ground.image_list:
+        #     ground.draw_warinig()
+        #     image_list[object_in]
+
+        # TODO refractor it later
         self.__ground_sprite_group.draw(hScreen)
         self.__tractor_sprite_group.draw(hScreen)
 
@@ -165,7 +172,6 @@ class Engine:
         self.__tractor_sprite_group.update()
         self.__ground_sprite_group.update()
 
-        print(pygame.time.get_ticks() / 1000)
         if (pygame.time.get_ticks() - self.__start_time) / 1000 > 4:
             self.__start_time = pygame.time.get_ticks()
 

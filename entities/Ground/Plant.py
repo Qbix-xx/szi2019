@@ -13,6 +13,7 @@ class Plant(AbstractHarvestable):
         super().__init__("Plant", self.image, x, y)
 
     def update(self, *args):
+        super().update()
         if self.get_grow_stage() >= 3:
             self.image = self.__sheet.subsurface(pygame.Rect(32, 0, 32, 32))
             if self.get_grow_stage() >= 6:

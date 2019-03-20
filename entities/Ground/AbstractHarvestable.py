@@ -25,6 +25,9 @@ class AbstractHarvestable(AbstractEntities):
     def get_grow_stage(self):
         return self.__grow_stage
 
+    def update(self, *args):
+        self.handle_warnings()
+
     def grow(self):
         if self.__check_if_stat_can_decline(self.__ground_stats["fertilizer"]):
             self.__ground_stats["fertilizer"] -= self.__ground_decline_rates["fertilizer_rate"]
@@ -36,6 +39,13 @@ class AbstractHarvestable(AbstractEntities):
                 self.__ground_stats["irrigation"] = 0
 
         self.__grow_stage += 1
+
+    def handle_warnings(self):
+        if self.__ground_stats["irrigation"] <= 100:
+            self.image.blit(self.__water_warning_image, (-20, 0))
+
+        if self.__ground_stats["fertilizer"] <= 100:
+            self.image.blit(self.__fertilizer_warning_image, (0, 0))
 
     def set_ground_stats(self, irrigation_level, fertilizer_level):
         self.__ground_stats = {
