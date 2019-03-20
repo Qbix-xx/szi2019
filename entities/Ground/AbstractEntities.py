@@ -1,9 +1,7 @@
-from abc import ABC
-
 import pygame
 
 
-class AbstractGround(pygame.sprite.Sprite, ABC):
+class AbstractEntities(pygame.sprite.Sprite):
     def __init__(self, name, image, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = image

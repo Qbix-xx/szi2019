@@ -14,6 +14,7 @@ class Engine:
     def __init__(self, map_size, path_to_map_layout):
 
         self.__MAP_SIZE = map_size
+        self.__start_time = pygame.time.get_ticks()
 
         # set fonts for rendering text
         self.__set_fonts_and_colours()
@@ -125,7 +126,6 @@ class Engine:
     def __render_ground_stats(self, hScreen):
 
         local_field_list = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
-        # local_field_list =  self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
         self.__render_name_surface(
             self.__ground_name_font,
             self.__ground_name_colour,
@@ -134,13 +134,10 @@ class Engine:
             hScreen
         )
 
-        if isinstance(self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
-                      [len(self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]) - 1],
+        if isinstance(local_field_list[len(local_field_list) - 1],
                       AbstractHarvestable):
             self.__render_stats_surface(
-                self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
-                [len(self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]) - 1]
-                    .get_ground_stats().items(),
+                local_field_list[len(local_field_list) - 1].get_ground_stats().items(),
                 self.__ground_stats_font,
                 self.__ground_stats_colour,
                 self.__MAP_SIZE + 4, 2,
@@ -166,12 +163,22 @@ class Engine:
 
     def update_sprites(self):
         self.__tractor_sprite_group.update()
+        self.__ground_sprite_group.update()
+
+        print(pygame.time.get_ticks() / 1000)
+        if (pygame.time.get_ticks() - self.__start_time) / 1000 > 4:
+            self.__start_time = pygame.time.get_ticks()
+
+            for ground_field in self.__ground_sprite_group:
+                if isinstance(ground_field, AbstractHarvestable):
+                    ground_field.grow()
 
     def do_things(self):
-        if isinstance(self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()], AbstractHarvestable):
+        local_field_instance = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+        if isinstance(local_field_instance[len(local_field_instance) - 1], AbstractHarvestable):
             if self.__tractor.operation("irrigation"):
-                self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()] \
+                local_field_instance[len(local_field_instance) - 1] \
                     .irrigate(self.__tractor.get_irrigate_rate())
             if self.__tractor.operation("fertilizer"):
-                self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()] \
+                local_field_instance[len(local_field_instance) - 1] \
                     .fertilize(self.__tractor.get_fertilize_rate())

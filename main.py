@@ -23,7 +23,6 @@ fpsClock = pygame.time.Clock()
 # create and init game engine
 engine = Engine(MAP_SIZE, PATH_TO_MAP)
 
-# load maplayout to engine
 # engine.load_map_from_file()
 
 while True:
