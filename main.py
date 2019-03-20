@@ -13,8 +13,10 @@ PATH_TO_MAP = "resources/map_layouts/layout1.txt"
 # WINDOW_SIZE = (MAP_SIZE*32+ 100, MAP_SIZE*32)
 # -----------------------
 
+
 # screen handle
 hScreen = pygame.display.set_mode(WINDOW_SIZE)
+
 
 pygame.display.set_caption('Czarny ciągnik')
 
