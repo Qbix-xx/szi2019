@@ -29,14 +29,11 @@ class AbstractHarvestable(AbstractEntities):
         self.handle_warnings()
 
     def grow(self):
-        if self.__check_if_stat_can_decline(self.__ground_stats["fertilizer"]):
-            self.__ground_stats["fertilizer"] -= self.__ground_decline_rates["fertilizer_rate"]
-            if self.__ground_stats["fertilizer"] <= 0:
-                self.__ground_stats["fertilizer"] = 0
-        if self.__check_if_stat_can_decline(self.__ground_stats["irrigation"]):
-            self.__ground_stats["irrigation"] -= self.__ground_decline_rates["irrigation_rate"]
-            if self.__ground_stats["irrigation"] <= 0:
-                self.__ground_stats["irrigation"] = 0
+        for stat in self.__ground_stats:
+            if self.__if_stat_can_decline(self.__ground_stats[stat]):
+                self.__ground_stats[stat] -= self.__ground_decline_rates[stat + "_rate"]
+                if self.__ground_stats[stat] <= 0:
+                    self.__ground_stats[stat] = 0
 
         self.__grow_stage += 1
 
@@ -57,17 +54,17 @@ class AbstractHarvestable(AbstractEntities):
         return self.__ground_stats
 
     def irrigate(self, capacity):
-        if self.__check_if_operation_possible(self.__ground_stats["irrigation"], capacity):
+        if self.__if_operation_possible(self.__ground_stats["irrigation"], capacity):
             self.__ground_stats["irrigation"] += capacity
 
     def fertilize(self, capacity):
-        if self.__check_if_operation_possible(self.__ground_stats["fertilizer"], capacity):
+        if self.__if_operation_possible(self.__ground_stats["fertilizer"], capacity):
             self.__ground_stats["fertilizer"] += capacity
 
     @staticmethod
-    def __check_if_operation_possible(level, capacity):
+    def __if_operation_possible(level, capacity):
         return True if ((level + capacity) <= 100) else False
 
     @staticmethod
-    def __check_if_stat_can_decline(level):
+    def __if_stat_can_decline(level):
         return True if level > 0 else False
