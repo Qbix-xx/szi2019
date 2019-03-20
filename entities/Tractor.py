@@ -22,20 +22,26 @@ class Tractor(pygame.sprite.Sprite):
         # 1 is needed because of additional lines between grid
         self.__step = 32 + 1
 
-        self.__irrigate_level_in_storage = 30
-        self.__irrigate_rate = 10
-
-        self.__fertilize_level_in_storage = 100
-        self.__fertilize_rate = 10
-
         self.storage_stats_decline_rates = {
-            "irrigation": self.__irrigate_rate,
-            "fertilizer": self.__fertilize_rate
+            "irrigation": 10,
+            "fertilizer": 10
         }
 
         self.storage_stats = {
-            "irrigation": self.__irrigate_level_in_storage,
-            "fertilizer": self.__fertilize_level_in_storage
+            "irrigation": 100,
+            "fertilizer": 100
+        }
+
+    def set_storage_stats(self, irrigation_level, fertilizer_level):
+        self.storage_stats = {
+            "irrigation": irrigation_level,
+            "fertilizer": fertilizer_level
+        }
+
+    def set_storage_stats_decline_rates(self, irrigation_level, fertilizer_level):
+        self.storage_stats_decline_rates = {
+            "irrigation": irrigation_level,
+            "fertilizer": fertilizer_level
         }
 
     def get_index_x(self):
