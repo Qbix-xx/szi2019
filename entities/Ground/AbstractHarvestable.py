@@ -54,7 +54,7 @@ class AbstractHarvestable(AbstractEntities):
         return self.__ground_stats
 
     def take_care(self, stat, capacity):
-        if self.__if_operation_possible(self.__ground_stats[stat], capacity):
+        # if self.if_operation_possible(self.__ground_stats[stat], capacity):
             self.__ground_stats[stat] += capacity
 
     # def irrigate(self, capacity):
@@ -65,9 +65,10 @@ class AbstractHarvestable(AbstractEntities):
     #     if self.__if_operation_possible(self.__ground_stats["fertilizer"], capacity):
     #         self.__ground_stats["fertilizer"] += capacity
 
-    @staticmethod
-    def __if_operation_possible(level, capacity):
-        return True if ((level + capacity) <= 100) else False
+    # def if_operation_possible(level, capacity):
+    def if_operation_possible(self, stat, capacity):
+        return True if ((self.__ground_stats[stat] + capacity) <= 100) else False
+        # return True if ((level + capacity) <= 100) else False
 
     @staticmethod
     def __if_stat_can_decline(level):

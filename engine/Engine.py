@@ -83,13 +83,6 @@ class Engine:
         self.__render_ground_stats(hScreen)
         self.__render_tractor_storage_stats(hScreen)
 
-        # for ground in self.__ground_sprite_group:
-        #
-        # for object_in in ground.image_list:
-        #     ground.draw_warinig()
-        #     image_list[object_in]
-
-        # TODO refractor it later
         self.__ground_sprite_group.draw(hScreen)
         self.__tractor_sprite_group.draw(hScreen)
 
@@ -182,7 +175,11 @@ class Engine:
     def do_things(self):
         local_field_instance = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
         if isinstance(local_field_instance[len(local_field_instance) - 1], AbstractHarvestable):
+
             for stat in self.__tractor.storage_stats:
-                if self.__tractor.operation(stat):
-                    local_field_instance[len(local_field_instance) - 1] \
-                        .take_care(stat, self.__tractor.get_fertilize_rate())
+                if self.__tractor.if_operation_posible(stat):
+                    if local_field_instance[len(local_field_instance) - 1] \
+                            .if_operation_possible(stat, self.__tractor.storage_stats_decline_rates[stat]):
+                        local_field_instance[len(local_field_instance) - 1] \
+                            .take_care(stat, self.__tractor.storage_stats_decline_rates[stat])
+                        self.__tractor.operation(stat)
