@@ -182,9 +182,7 @@ class Engine:
     def do_things(self):
         local_field_instance = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
         if isinstance(local_field_instance[len(local_field_instance) - 1], AbstractHarvestable):
-            if self.__tractor.operation("irrigation"):
-                local_field_instance[len(local_field_instance) - 1] \
-                    .irrigate(self.__tractor.get_irrigate_rate())
-            if self.__tractor.operation("fertilizer"):
-                local_field_instance[len(local_field_instance) - 1] \
-                    .fertilize(self.__tractor.get_fertilize_rate())
+            for stat in self.__tractor.storage_stats:
+                if self.__tractor.operation(stat):
+                    local_field_instance[len(local_field_instance) - 1] \
+                        .take_care(stat, self.__tractor.get_fertilize_rate())
