@@ -5,11 +5,12 @@ from pygame.locals import *
 
 from entities.Ground.AbstractHarvestable import AbstractHarvestable
 from entities.Ground.Grass import Grass
+from entities.Ground.Plant import Plant
 from entities.Ground.Road import Road
 from entities.Tractor import Tractor
 
 
-class Engine():
+class Engine:
     def __init__(self, map_size, path_to_map_layout):
 
         self.__MAP_SIZE = map_size
@@ -52,16 +53,22 @@ class Engine():
     def __game_map_init(self):
         # list of lists (2d grid) containing all the objects on the map
         # mwiecek: init empty game map matrix
-        self.__game_map = [[None] * self.__MAP_SIZE for _ in range(self.__MAP_SIZE)]
+        self.__game_map = [[[]] * self.__MAP_SIZE for _ in range(self.__MAP_SIZE)]
 
         for i in range(self.__MAP_SIZE):
             for j in range(self.__MAP_SIZE):
+
+                self.__game_map[i][j] = []
+
                 if self.__mapLayoutFile[i][j] == "1":
-                    self.__game_map[i][j] = Road(i * 32 + i + 32, j * 32 + j + 32)
+                    self.__game_map[i][j].append(Road(i * 32 + i + 32, j * 32 + j + 32))
                 elif self.__mapLayoutFile[i][j] == "2":
                     self.__tractor.set_rect(i, j)
+                elif self.__mapLayoutFile[i][j] == "3":
+                    self.__game_map[i][j].append(Grass(i * 32 + i + 32, j * 32 + j + 32))
+                    self.__game_map[i][j].append(Plant(i * 32 + i + 32, j * 32 + j + 32))
                 else:
-                    self.__game_map[i][j] = Grass(i * 32 + i + 32, j * 32 + j + 32)
+                    self.__game_map[i][j].append(Grass(i * 32 + i + 32, j * 32 + j + 32))
 
         self.__ground_sprite_group.add(self.__game_map)
 
@@ -74,20 +81,6 @@ class Engine():
 
         self.__render_ground_stats(hScreen)
         self.__render_tractor_storage_stats(hScreen)
-        # old way of map rendering
-        # for i in range(self._MAP_SIZE):
-        #     for j in range(self._MAP_SIZE):
-        # hScreen.blit(self._game_map[i][j].get_surface_image(), (self._game_map[i][j].rect.x, self._game_map[i][j].rect.y))
-
-        # if pygame.sprite.collide_rect(self.tractor, self._game_map[i][j]):
-        # name_surface = self.ground_name_font.render(self._game_map[i][j].name, True, (0, 0, 0))
-        # hScreen.blit(name_surface, (self._MAP_SIZE * 32 + 150, 80))
-
-        # m = 0
-        # for k, l in self._game_map[i][j].get_stats().items():
-        #     stats_surface = self.ground_stats_font.render(str(k) + ": " + str(l), True, (0, 0, 0))
-        #     hScreen.blit(stats_surface, (self._MAP_SIZE * 32 + 150, 130 + m * 30))
-        #     m += 1
 
         self.__ground_sprite_group.draw(hScreen)
         self.__tractor_sprite_group.draw(hScreen)
@@ -130,17 +123,24 @@ class Engine():
         )
 
     def __render_ground_stats(self, hScreen):
+
+        local_field_list = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+        # local_field_list =  self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
         self.__render_name_surface(
             self.__ground_name_font,
             self.__ground_name_colour,
-            self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()].get_name(),
+            local_field_list[len(local_field_list) - 1].get_name(),
             self.__MAP_SIZE + 4, 1,
             hScreen
         )
 
-        if isinstance(self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()], AbstractHarvestable):
+        if isinstance(self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+                      [len(self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]) - 1],
+                      AbstractHarvestable):
             self.__render_stats_surface(
-                self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()].get_ground_stats().items(),
+                self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+                [len(self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]) - 1]
+                    .get_ground_stats().items(),
                 self.__ground_stats_font,
                 self.__ground_stats_colour,
                 self.__MAP_SIZE + 4, 2,
