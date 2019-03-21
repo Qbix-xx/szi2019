@@ -22,15 +22,26 @@ class Tractor(pygame.sprite.Sprite):
         # 1 is needed because of additional lines between grid
         self.__step = 32 + 1
 
-        self.__irrigate_level_in_storage = 30
-        self.__irrigate_rate = 10
-
-        self.__fertilize_level_in_storage = 100
-        self.__fertilize_rate = 15
+        self.storage_stats_decline_rates = {
+            "irrigation": 10,
+            "fertilizer": 10
+        }
 
         self.storage_stats = {
-            "irrigation": self.__irrigate_level_in_storage,
-            "fertilizer": self.__fertilize_level_in_storage
+            "irrigation": 100,
+            "fertilizer": 100
+        }
+
+    def set_storage_stats(self, irrigation_level, fertilizer_level):
+        self.storage_stats = {
+            "irrigation": irrigation_level,
+            "fertilizer": fertilizer_level
+        }
+
+    def set_storage_stats_decline_rates(self, irrigation_level, fertilizer_level):
+        self.storage_stats_decline_rates = {
+            "irrigation": irrigation_level,
+            "fertilizer": fertilizer_level
         }
 
     def get_index_x(self):
@@ -76,12 +87,8 @@ class Tractor(pygame.sprite.Sprite):
                        and (self.rect.y + step_y <= 33 * self.__map_size) \
             else False
 
-    def operation(self, operation_name):
-        flag = False
-        if self.storage_stats[operation_name] - self.__fertilize_rate > 0:
-            self.storage_stats[operation_name] -= self.__fertilize_rate
-            flag = True
-        elif self.storage_stats[operation_name] > 0:
-            self.storage_stats[operation_name] = 0
-            flag = True
-        return flag
+    def operation(self, stat):
+        self.storage_stats[stat] -= self.storage_stats_decline_rates[stat]
+
+    def if_operation_posible(self, stat):
+        return True if self.storage_stats[stat] - self.storage_stats_decline_rates[stat] >= 0 else False
