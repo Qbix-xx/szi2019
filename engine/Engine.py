@@ -172,7 +172,7 @@ class Engine:
                 if isinstance(ground_field, AbstractHarvestable):
                     ground_field.grow()
 
-    def do_things(self):  # TODO: unreadable, need to be refractored
+    def do_things(self):
         field = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
         index = len(field) - 1
 
