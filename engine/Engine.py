@@ -173,13 +173,19 @@ class Engine:
                     ground_field.grow()
 
     def do_things(self):  # TODO: unreadable, need to be refractored
-        local_field_instance = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
-        if isinstance(local_field_instance[len(local_field_instance) - 1], AbstractHarvestable):
+        field = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+        index = len(field) - 1
+
+        if isinstance(field[index], AbstractHarvestable):
 
             for stat in self.__tractor.get_ground_stats_dict().keys():
+
                 if self.__tractor.if_operation_posible(stat):
-                    if local_field_instance[len(local_field_instance) - 1] \
-                            .if_operation_possible(stat, self.__tractor.get_ground_stats_dict().get(stat)["rate"]):
-                        local_field_instance[len(local_field_instance) - 1] \
-                            .take_care(stat, self.__tractor.get_ground_stats_dict().get(stat)["rate"])
+                    tractor_stat_rate = self.__tractor.get_ground_stats_dict().get(stat)["rate"]
+
+                    if field[index] \
+                            .if_operation_possible(stat, tractor_stat_rate):
+                        field[index] \
+                            .take_care(stat, tractor_stat_rate)
+
                         self.__tractor.operation(stat)
