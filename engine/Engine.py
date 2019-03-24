@@ -25,9 +25,6 @@ class Engine:
         # create game map from layout
         self.__game_map_init()
 
-        # 0 = menu, 1 = playing, ...(?)
-        # self.gameState = 0 # TODO: idk, haven't found purpose for this yet
-
     def __init_sprites_group(self):
         self.__ground_sprite_group = pygame.sprite.Group()
         self.__tractor_sprite_group = pygame.sprite.Group()
@@ -96,9 +93,11 @@ class Engine:
 
     def __render_stats_surface(self, dict, font, colour, position_x, position_y, hScreen):
         iterator_over_stat_dict_key = 0
-        for stat_name, stat_level in dict:
+        for stat in dict.keys():
             stats_surface = font.render(
-                str(stat_name) + ": " + str(stat_level) + "%",
+                str(stat) + ": "
+                + str(dict.get(stat)["level"])
+                + "%",
                 True,
                 colour
             )
@@ -116,7 +115,7 @@ class Engine:
         )
 
         self.__render_stats_surface(
-            self.__tractor.storage_stats.items(),
+            self.__tractor.get_ground_stats_dict(),
             self.__tractor_stats_font,
             self.__tractor_stats_colour,
             1, self.__MAP_SIZE + 3,
@@ -137,7 +136,8 @@ class Engine:
         if isinstance(local_field_list[len(local_field_list) - 1],
                       AbstractHarvestable):
             self.__render_stats_surface(
-                local_field_list[len(local_field_list) - 1].get_ground_stats().items(),
+                # local_field_list[len(local_field_list) - 1].get_ground_stats_dict().items(),
+                local_field_list[len(local_field_list) - 1].get_ground_stats_dict(),
                 self.__ground_stats_font,
                 self.__ground_stats_colour,
                 self.__MAP_SIZE + 4, 2,
@@ -172,14 +172,14 @@ class Engine:
                 if isinstance(ground_field, AbstractHarvestable):
                     ground_field.grow()
 
-    def do_things(self):
+    def do_things(self):  # TODO: unreadable, need to be refractored
         local_field_instance = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
         if isinstance(local_field_instance[len(local_field_instance) - 1], AbstractHarvestable):
 
-            for stat in self.__tractor.storage_stats:
+            for stat in self.__tractor.get_ground_stats_dict().keys():
                 if self.__tractor.if_operation_posible(stat):
                     if local_field_instance[len(local_field_instance) - 1] \
-                            .if_operation_possible(stat, self.__tractor.storage_stats_decline_rates[stat]):
+                            .if_operation_possible(stat, self.__tractor.get_ground_stats_dict().get(stat)["rate"]):
                         local_field_instance[len(local_field_instance) - 1] \
-                            .take_care(stat, self.__tractor.storage_stats_decline_rates[stat])
+                            .take_care(stat, self.__tractor.get_ground_stats_dict().get(stat)["rate"])
                         self.__tractor.operation(stat)
