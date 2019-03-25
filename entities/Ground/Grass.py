@@ -1,7 +1,7 @@
 import pygame
 
 # from entities.Ground.AbstractHarvestable import AbstractHarvestable
-from entities.Ground.AbstractEntities import AbstractEntities
+from entities.AbstractEntities import AbstractEntities
 
 
 class Grass(AbstractEntities):

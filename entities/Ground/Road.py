@@ -1,6 +1,6 @@
 import pygame
 
-from entities.Ground.AbstractEntities import AbstractEntities
+from entities.AbstractEntities import AbstractEntities
 
 
 class Road(AbstractEntities):

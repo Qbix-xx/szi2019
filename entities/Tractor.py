@@ -1,9 +1,15 @@
+from abc import ABC
+
 import pygame
+from pygame.sprite import Sprite
+
+from entities.AbstractHarvestableInterface import AbstractHarvestableInterface
 
 
-class Tractor(pygame.sprite.Sprite):
+class Tractor(Sprite, AbstractHarvestableInterface, ABC):
     def __init__(self, map_size):
         pygame.sprite.Sprite.__init__(self)
+        AbstractHarvestableInterface.__init__(self)
 
         self.__map_size = map_size
 
@@ -22,39 +28,31 @@ class Tractor(pygame.sprite.Sprite):
         # 1 is needed because of additional lines between grid
         self.__step = 32 + 1
 
-        self.storage_stats_decline_rates = {
-            "irrigation": 10,
-            "fertilizer": 10
+        self.__init_stats()
+
+    def __init_stats(self):
+        fertilizer = {
+            "level": 100,
+            "rate": 10
         }
 
-        self.storage_stats = {
-            "irrigation": 100,
-            "fertilizer": 100
+        irrigation = {
+            "level": 100,
+            "rate": 10
         }
 
-    def set_storage_stats(self, irrigation_level, fertilizer_level):
-        self.storage_stats = {
-            "irrigation": irrigation_level,
-            "fertilizer": fertilizer_level
+        stats = {
+            "irrigation": irrigation,
+            "fertilizer": fertilizer
         }
 
-    def set_storage_stats_decline_rates(self, irrigation_level, fertilizer_level):
-        self.storage_stats_decline_rates = {
-            "irrigation": irrigation_level,
-            "fertilizer": fertilizer_level
-        }
+        self.set_stats(stats)
 
     def get_index_x(self):
         return self.__index_x
 
     def get_index_y(self):
         return self.__index_y
-
-    def get_irrigate_rate(self):
-        return self.__irrigate_rate
-
-    def get_fertilize_rate(self):
-        return self.__fertilize_rate
 
     def set_rect(self, x, y):
         self.rect.x = x * 32
@@ -84,11 +82,18 @@ class Tractor(pygame.sprite.Sprite):
         return True if (self.rect.x + step_x >= 32) \
                        and (self.rect.x + step_x <= 33 * self.__map_size) \
                        and (self.rect.y + step_y >= 32) \
-                       and (self.rect.y + step_y <= 33 * self.__map_size) \
-            else False
+                       and (self.rect.y + step_y <= 33 * self.__map_size) else False
 
-    def operation(self, stat):
-        self.storage_stats[stat] -= self.storage_stats_decline_rates[stat]
+    def operation(self, stat, rate):
+        self.get_stats().get(stat)["level"] -= rate
 
-    def if_operation_posible(self, stat):
-        return True if self.storage_stats[stat] - self.storage_stats_decline_rates[stat] >= 0 else False
+    def if_operation_possible(self, stat):
+        return True if self.get_stats().get(stat)["level"] >= 0 else False
+
+    def get_stat_rate(self, stat):
+        rate = self.get_stats().get(stat)["rate"]
+
+        if rate > self.get_stats().get(stat)["level"]:
+            rate = self.get_stats().get(stat)["level"]
+
+        return rate
