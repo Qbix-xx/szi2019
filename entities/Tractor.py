@@ -3,13 +3,13 @@ from abc import ABC
 import pygame
 from pygame.sprite import Sprite
 
-from entities.AbstractHarvestable import AbstractHarvestable
+from entities.AbstractHarvestableInterface import AbstractHarvestableInterface
 
 
-class Tractor(Sprite, AbstractHarvestable, ABC):
+class Tractor(Sprite, AbstractHarvestableInterface, ABC):
     def __init__(self, map_size):
         pygame.sprite.Sprite.__init__(self)
-        AbstractHarvestable.__init__(self)
+        AbstractHarvestableInterface.__init__(self)
 
         self.__map_size = map_size
 

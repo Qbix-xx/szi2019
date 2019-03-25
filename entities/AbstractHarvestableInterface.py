@@ -1,7 +1,7 @@
 import abc
 
 
-class AbstractHarvestable:
+class AbstractHarvestableInterface:
     def __init__(self):
         self.__stats = {}
 

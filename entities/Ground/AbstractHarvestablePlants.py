@@ -3,10 +3,10 @@ from abc import ABC
 import pygame
 
 from entities.AbstractEntities import AbstractEntities
-from entities.AbstractHarvestable import AbstractHarvestable
+from entities.AbstractHarvestableInterface import AbstractHarvestableInterface
 
 
-class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestable, ABC):
+class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, ABC):
 
     def __init__(self, name, spritesheet, x, y):
         self.__grow_stage_images = {}

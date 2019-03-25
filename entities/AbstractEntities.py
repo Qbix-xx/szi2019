@@ -1,3 +1,5 @@
+import abc
+
 import pygame
 
 
@@ -17,3 +19,7 @@ class AbstractEntities(pygame.sprite.Sprite):
 
     def get_name(self):
         return self.__name
+
+    @abc.abstractmethod
+    def __init_stats(self):
+        pass
