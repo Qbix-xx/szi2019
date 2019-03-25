@@ -19,7 +19,7 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
         # starting position
         # default is [1,1] in map matrix, upper left corner of map
-        self.set_rect(1, 1)
+        self.set_rect_by_index((1, 1))
 
         # position in map matrix
         self.__index_x = int((self.rect.x - 32) / 32)
@@ -29,6 +29,9 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         self.__step = 32 + 1
 
         self.__init_stats()
+
+    def get_rect(self):
+        return self.rect
 
     def __init_stats(self):
         fertilizer = {
@@ -54,9 +57,12 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
     def get_index_y(self):
         return self.__index_y
 
-    def set_rect(self, x, y):
-        self.rect.x = x * 32
-        self.rect.y = y * 32
+    def set_rect_by_index(self, rect):
+        self.rect.x = rect[0] * 32
+        self.rect.y = rect[1] * 32
+
+    def set_rect(self, rect):
+        self.rect = rect
 
     def move_right(self):
         self.update_position(self.__step, 0)

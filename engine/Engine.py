@@ -7,6 +7,7 @@ from entities.Ground.AbstractHarvestablePlants import AbstractHarvestablePlants
 from entities.Ground.Grass import Grass
 from entities.Ground.Plant import Plant
 from entities.Ground.Road import Road
+from entities.Ground.Tree import Tree
 from entities.Tractor import Tractor
 
 
@@ -22,10 +23,8 @@ class Engine:
 
         self.plant_dev = None
 
-
         self.__init_sprites_group()
         self.__init_tractor()
-
 
         # create game map from layout
         self.__game_map_init()
@@ -33,15 +32,14 @@ class Engine:
     def __init_sprites_group(self):
         self.__ground_sprite_group = pygame.sprite.Group()
         self.__tractor_sprite_group = pygame.sprite.Group()
-
-        # dev
-        self.__test = pygame.sprite.Group()
+        self.__solid_sprite_group = pygame.sprite.Group()
 
     def __init_tractor(self):
         self.__tractor = Tractor(self.__MAP_SIZE)
         self.__tractor_sprite_group.add(self.__tractor)
 
     def __set_fonts_and_colours(self):
+        # TODO move it to dict
         self.__ground_name_font = pygame.font.SysFont('Helvetica', 30)
         self.__ground_name_colour = (0, 0, 0)
         self.__ground_stats_font = pygame.font.SysFont('Helvetica', 20)
@@ -66,19 +64,22 @@ class Engine:
 
                 self.__game_map[i][j] = []
 
+                self.__game_map[i][j].append(Grass(i * 32 + i + 32, j * 32 + j + 32))
+
                 if self.__mapLayoutFile[i][j] == "1":
                     self.__game_map[i][j].append(Road(i * 32 + i + 32, j * 32 + j + 32))
                 elif self.__mapLayoutFile[i][j] == "2":
-                    self.__tractor.set_rect(i, j)
+                    self.__tractor.set_rect_by_index(i, j)
                 elif self.__mapLayoutFile[i][j] == "3":
-                    self.__game_map[i][j].append(Grass(i * 32 + i + 32, j * 32 + j + 32))
                     # TODO
                     temp_plant = Plant(i * 32 + i + 32, j * 32 + j + 32)
                     self.plant_dev = temp_plant
                     self.__game_map[i][j].append(temp_plant)
                     # self.__game_map[i][j].append(Plant(i * 32 + i + 32, j * 32 + j + 32))
-                else:
-                    self.__game_map[i][j].append(Grass(i * 32 + i + 32, j * 32 + j + 32))
+                elif self.__mapLayoutFile[i][j] == "4":
+                    temp_object = Tree(i * 32 + i + 32, j * 32 + j + 32)
+                    self.__game_map[i][j].append(temp_object)
+                    self.__solid_sprite_group.add(temp_object)
 
         self.__ground_sprite_group.add(self.__game_map)
 
@@ -170,6 +171,8 @@ class Engine:
                 pygame.quit()
                 sys.exit()
             elif event.type == KEYUP:
+                offset = self.__tractor.get_rect().copy()
+
                 if event.key == K_RIGHT:
                     self.__tractor.move_right()
                 elif event.key == K_LEFT:
@@ -180,6 +183,9 @@ class Engine:
                     self.__tractor.move_up()
                 elif event.key == K_f:
                     self.do_things()
+
+                if self.collision_detection():
+                    self.__tractor.set_rect(offset)
 
     def update_sprites(self):
         if (pygame.time.get_ticks() - self.__start_time) / 1000 > 4:
@@ -208,3 +214,12 @@ class Engine:
                         field[index].update()
 
                         self.__tractor.operation(stat, tractor_stat_rate)
+
+    def collision_detection(self):
+        flag = False
+
+        for object in self.__solid_sprite_group:
+            if object.is_collided_with(self.__tractor):
+                flag = True
+
+        return flag

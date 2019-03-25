@@ -17,6 +17,9 @@ class AbstractEntities(pygame.sprite.Sprite):
     def get_surface_image(self):
         return self.image
 
+    def is_collided_with(self, sprite):
+        return self.rect.colliderect(sprite.rect)
+
     def get_name(self):
         return self.__name
 
