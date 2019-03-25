@@ -3,7 +3,7 @@ import sys
 import pygame
 from pygame.locals import *
 
-from entities.Ground.AbstractHarvestable import AbstractHarvestable
+from entities.Ground.AbstractHarvestablePlants import AbstractHarvestablePlants
 from entities.Ground.Grass import Grass
 from entities.Ground.Plant import Plant
 from entities.Ground.Road import Road
@@ -19,8 +19,13 @@ class Engine:
         # set fonts for rendering text
         self.__set_fonts_and_colours()
         self.__load_map_from_file(path_to_map_layout)
+
+        self.plant_dev = None
+
+
         self.__init_sprites_group()
         self.__init_tractor()
+
 
         # create game map from layout
         self.__game_map_init()
@@ -28,6 +33,9 @@ class Engine:
     def __init_sprites_group(self):
         self.__ground_sprite_group = pygame.sprite.Group()
         self.__tractor_sprite_group = pygame.sprite.Group()
+
+        # dev
+        self.__test = pygame.sprite.Group()
 
     def __init_tractor(self):
         self.__tractor = Tractor(self.__MAP_SIZE)
@@ -64,7 +72,11 @@ class Engine:
                     self.__tractor.set_rect(i, j)
                 elif self.__mapLayoutFile[i][j] == "3":
                     self.__game_map[i][j].append(Grass(i * 32 + i + 32, j * 32 + j + 32))
-                    self.__game_map[i][j].append(Plant(i * 32 + i + 32, j * 32 + j + 32))
+                    # TODO
+                    temp_plant = Plant(i * 32 + i + 32, j * 32 + j + 32)
+                    self.plant_dev = temp_plant
+                    self.__game_map[i][j].append(temp_plant)
+                    # self.__game_map[i][j].append(Plant(i * 32 + i + 32, j * 32 + j + 32))
                 else:
                     self.__game_map[i][j].append(Grass(i * 32 + i + 32, j * 32 + j + 32))
 
@@ -80,8 +92,17 @@ class Engine:
         self.__render_ground_stats(hScreen)
         self.__render_tractor_storage_stats(hScreen)
 
+        # render sprites groups
         self.__ground_sprite_group.draw(hScreen)
         self.__tractor_sprite_group.draw(hScreen)
+
+        self.render_dev(hScreen)
+
+    def render_dev(self, hScreen):
+        counter = 0
+        for img in self.plant_dev.get_grow_stage_images().values():
+            hScreen.blit(img, (700, 500 + counter * 50))
+            counter += 1
 
     def __render_name_surface(self, font, colour, string_name, position_x, position_y, hScreen):
         name_surface = font.render(
@@ -115,7 +136,7 @@ class Engine:
         )
 
         self.__render_stats_surface(
-            self.__tractor.get_ground_stats_dict(),
+            self.__tractor.get_stats(),
             self.__tractor_stats_font,
             self.__tractor_stats_colour,
             1, self.__MAP_SIZE + 3,
@@ -134,10 +155,9 @@ class Engine:
         )
 
         if isinstance(local_field_list[len(local_field_list) - 1],
-                      AbstractHarvestable):
+                      AbstractHarvestablePlants):
             self.__render_stats_surface(
-                # local_field_list[len(local_field_list) - 1].get_ground_stats_dict().items(),
-                local_field_list[len(local_field_list) - 1].get_ground_stats_dict(),
+                local_field_list[len(local_field_list) - 1].get_stats(),
                 self.__ground_stats_font,
                 self.__ground_stats_colour,
                 self.__MAP_SIZE + 4, 2,
@@ -162,30 +182,29 @@ class Engine:
                     self.do_things()
 
     def update_sprites(self):
-        self.__tractor_sprite_group.update()
-        self.__ground_sprite_group.update()
-
         if (pygame.time.get_ticks() - self.__start_time) / 1000 > 4:
             self.__start_time = pygame.time.get_ticks()
 
             for ground_field in self.__ground_sprite_group:
-                if isinstance(ground_field, AbstractHarvestable):
+                if isinstance(ground_field, AbstractHarvestablePlants):
                     ground_field.grow()
+
+        self.__tractor_sprite_group.update()
+        self.__ground_sprite_group.update()
 
     def do_things(self):
         field = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
         index = len(field) - 1
 
-        if isinstance(field[index], AbstractHarvestable):
+        if isinstance(field[index], AbstractHarvestablePlants):
 
-            for stat in self.__tractor.get_ground_stats_dict().keys():
+            for stat in self.__tractor.get_stats().keys():
 
-                if self.__tractor.if_operation_posible(stat):
-                    tractor_stat_rate = self.__tractor.get_ground_stats_dict().get(stat)["rate"]
+                if self.__tractor.if_operation_possible(stat):
+                    tractor_stat_rate = self.__tractor.get_stat_rate(stat)
 
-                    if field[index] \
-                            .if_operation_possible(stat, tractor_stat_rate):
-                        field[index] \
-                            .take_care(stat, tractor_stat_rate)
+                    if field[index].if_operation_possible(stat, tractor_stat_rate):
+                        field[index].take_care(stat, tractor_stat_rate)
+                        field[index].update()
 
-                        self.__tractor.operation(stat)
+                        self.__tractor.operation(stat, tractor_stat_rate)

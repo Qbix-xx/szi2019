@@ -1,9 +1,15 @@
+from abc import ABC
+
 import pygame
+from pygame.sprite import Sprite
+
+from entities.AbstractHarvestable import AbstractHarvestable
 
 
-class Tractor(pygame.sprite.Sprite):
+class Tractor(Sprite, AbstractHarvestable, ABC):
     def __init__(self, map_size):
         pygame.sprite.Sprite.__init__(self)
+        AbstractHarvestable.__init__(self)
 
         self.__map_size = map_size
 
@@ -22,30 +28,25 @@ class Tractor(pygame.sprite.Sprite):
         # 1 is needed because of additional lines between grid
         self.__step = 32 + 1
 
-        self.__stats = {}
         self.__init_stats()
 
     def __init_stats(self):
-        self.__fertilizer = {
+        fertilizer = {
             "level": 100,
             "rate": 10
         }
 
-        self.__irrigation = {
+        irrigation = {
             "level": 100,
             "rate": 10
         }
 
-        self.__stats = {
-            "irrigation": self.__irrigation,
-            "fertilizer": self.__fertilizer
+        stats = {
+            "irrigation": irrigation,
+            "fertilizer": fertilizer
         }
 
-    def get_ground_stats_dict(self):
-        return self.__stats
-
-    def get_ground_stat(self, stat):
-        return self.__storage_stats[stat]
+        self.set_stats(stats)
 
     def get_index_x(self):
         return self.__index_x
@@ -83,8 +84,16 @@ class Tractor(pygame.sprite.Sprite):
                        and (self.rect.y + step_y >= 32) \
                        and (self.rect.y + step_y <= 33 * self.__map_size) else False
 
-    def operation(self, stat):
-        self.__stats.get(stat)["level"] -= self.__stats.get(stat)["rate"]
+    def operation(self, stat, rate):
+        self.get_stats().get(stat)["level"] -= rate
 
-    def if_operation_posible(self, stat):
-        return True if self.__stats.get(stat)["level"] - self.__stats.get(stat)["rate"] >= 0 else False
+    def if_operation_possible(self, stat):
+        return True if self.get_stats().get(stat)["level"] >= 0 else False
+
+    def get_stat_rate(self, stat):
+        rate = self.get_stats().get(stat)["rate"]
+
+        if rate > self.get_stats().get(stat)["level"]:
+            rate = self.get_stats().get(stat)["level"]
+
+        return rate
