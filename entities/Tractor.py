@@ -12,9 +12,12 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         AbstractHarvestableInterface.__init__(self)
 
         self.__map_size = map_size
+        self.__spritesheet = {}
 
-        self.__sheet = pygame.image.load("resources/sprites/tractor_spritesheet.png").convert_alpha()
-        self.image = self.__sheet.subsurface(pygame.Rect(0, 0, 32, 32))
+        self.__init_spritesheet()
+
+        self.image = self.__spritesheet["right"]
+
         self.rect = self.image.get_rect()
 
         # starting position
@@ -29,6 +32,14 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         self.__step = 32 + 1
 
         self.__init_stats()
+
+    def __init_spritesheet(self):
+        sheet = pygame.image.load("resources/sprites/tractor.png").convert_alpha()
+
+        self.__spritesheet = {
+            "left": pygame.transform.flip(sheet, True, False),
+            "right": sheet
+        }
 
     def get_rect(self):
         return self.rect
@@ -66,9 +77,11 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
     def move_right(self):
         self.update_position(self.__step, 0)
+        self.image = self.__spritesheet["right"]
 
     def move_left(self):
         self.update_position(-self.__step, 0)
+        self.image = self.__spritesheet["left"]
 
     def move_down(self):
         self.update_position(0, self.__step)
