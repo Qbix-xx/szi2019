@@ -10,6 +10,7 @@ from entities.Ground.Plant import Plant
 from entities.Ground.Road import Road
 from entities.Ground.Tree import Tree
 from entities.Tractor import Tractor
+from entities.WaterContainer import WaterContainer
 
 
 class Engine:
@@ -29,6 +30,8 @@ class Engine:
 
         # dev
         self.barn = None
+        self.watercontainer = None
+
 
         # create game map from layout
         self.__game_map_init()
@@ -89,6 +92,11 @@ class Engine:
                     self.__game_map[i][j].append(temp_object)
                     self.__solid_sprite_group.add(temp_object)
                     self.barn = temp_object
+                elif self.__mapLayoutFile[i][j] == "6":
+                    temp_object = WaterContainer(i * 32 + i + 32, j * 32 + j + 32)
+                    self.__game_map[i][j].append(temp_object)
+                    self.__solid_sprite_group.add(temp_object)
+                    self.watercontainer = temp_object
 
 
         self.__ground_sprite_group.add(self.__game_map)
@@ -236,6 +244,13 @@ class Engine:
 
         return flag
 
+    def watercontainer_hitbox_collision_detection(self):
+        flag = False
+
+        if self.watercontainer.get_refill_hitbox().colliderect(self.__tractor.rect):
+            flag = True
+
+        return flag
     def tractor_collision_detection(self):
         flag = False
 
