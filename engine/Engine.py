@@ -73,7 +73,6 @@ class Engine:
                 if self.__mapLayoutFile[i][j] == "1":
                     self.__game_map[i][j].append(Road(i * 32 + i + 32, j * 32 + j + 32))
                 elif self.__mapLayoutFile[i][j] == "2":
-                    print("t")
                     self.__tractor.set_rect_by_index((i, j))
                 elif self.__mapLayoutFile[i][j] == "3":
                     # TODO
