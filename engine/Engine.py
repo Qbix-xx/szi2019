@@ -169,6 +169,16 @@ class Engine:
             300,
             hScreen
         )
+
+        self.__render_score_text(
+            self.__score_font,
+            self.__score_colour,
+            "Plants delivered: " + str(self.__plant_score),
+            600,
+            330,
+            hScreen
+        )
+
     def __render_ground_stats(self, hScreen):
 
         local_field_list = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
@@ -191,6 +201,14 @@ class Engine:
             )
 
     def __render_inventory_text(self, font, colour, string_name, position_x, position_y, hScreen):
+        name_surface = font.render(
+            string_name,
+            True,
+            colour
+        )
+        hScreen.blit(name_surface, (position_x, position_y))
+
+    def __render_score_text(self, font, colour, string_name, position_x, position_y, hScreen):
         name_surface = font.render(
             string_name,
             True,
