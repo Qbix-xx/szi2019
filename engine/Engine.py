@@ -56,7 +56,7 @@ class Engine:
 
     def __load_map_from_file(self, path):
         with open(path) as textfile:
-            self.__mapLayoutFile = list(line.split(" ") for line in textfile)
+            self.__mapLayoutFile = list(line.replace('\n', '').split(" ") for line in textfile)
 
     def __game_map_init(self):
         # list of lists (2d grid) containing all the objects on the map
@@ -73,8 +73,7 @@ class Engine:
                 if self.__mapLayoutFile[i][j] == "1":
                     self.__game_map[i][j].append(Road(i * 32 + i + 32, j * 32 + j + 32))
                 elif self.__mapLayoutFile[i][j] == "2":
-                    a = 1
-                    # self.__tractor.set_rect_by_index(1, 7)
+                    print("t")
                     self.__tractor.set_rect_by_index((i, j))
                 elif self.__mapLayoutFile[i][j] == "3":
                     # TODO
