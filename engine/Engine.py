@@ -33,6 +33,9 @@ class Engine:
         # create game map from layout
         self.__game_map_init()
 
+        # plants delivered in total
+        self.__plant_score = 0
+
     def __init_sprites_group(self):
         self.__ground_sprite_group = pygame.sprite.Group()
         self.__tractor_sprite_group = pygame.sprite.Group()
@@ -53,6 +56,12 @@ class Engine:
         self.__tractor_name_colour = (0, 0, 0)
         self.__tractor_stats_font = pygame.font.SysFont('Helvetica', 20)
         self.__tractor_stats_colour = (0, 0, 0)
+
+        self.__inventory_title_font = pygame.font.SysFont('Helvetica', 30)
+        self.__inventory_title_colour = (0, 0, 0)
+
+        self.__score_font = pygame.font.SysFont('Helvetica', 30)
+        self.__score_colour = (0, 0, 0)
 
     def __load_map_from_file(self, path):
         with open(path) as textfile:
@@ -90,18 +99,16 @@ class Engine:
                     self.__solid_sprite_group.add(temp_object)
                     self.barn = temp_object
 
-
         self.__ground_sprite_group.add(self.__game_map)
 
     def render(self, hScreen):
         # grey background
         hScreen.fill([100, 100, 100])
 
-        # black background below map grid to make lines more visible
-        pygame.draw.rect(hScreen, [0, 0, 0], (32, 32, 33 * self.__MAP_SIZE, 33 * self.__MAP_SIZE))
-
+        # black background beneath map grid to make lines more visible
+        pygame.draw.rect(hScreen, [0, 0, 0], (30, 30, 33 * self.__MAP_SIZE + 3, 33 * self.__MAP_SIZE + 3))
         self.__render_ground_stats(hScreen)
-        self.__render_tractor_storage_stats(hScreen)
+        self.__render_interface(hScreen)
 
         # render sprites groups
         self.__ground_sprite_group.draw(hScreen)
@@ -137,7 +144,7 @@ class Engine:
             hScreen.blit(stats_surface, (position_x * 33, position_y * 33 + iterator_over_stat_dict_key * 33))
             iterator_over_stat_dict_key += 1
 
-    def __render_tractor_storage_stats(self, hScreen):
+    def __render_interface(self, hScreen):
         self.__render_name_surface(
             self.__tractor_name_font,
             self.__tractor_name_colour,
@@ -154,6 +161,14 @@ class Engine:
             hScreen
         )
 
+        self.__render_inventory_text(
+            self.__inventory_title_font,
+            self.__inventory_title_colour,
+            "Plants held: " + str(self.__tractor.get_plants_held()) + "/3",
+            600,
+            300,
+            hScreen
+        )
     def __render_ground_stats(self, hScreen):
 
         local_field_list = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
@@ -175,6 +190,14 @@ class Engine:
                 hScreen
             )
 
+    def __render_inventory_text(self, font, colour, string_name, position_x, position_y, hScreen):
+        name_surface = font.render(
+            string_name,
+            True,
+            colour
+        )
+        hScreen.blit(name_surface, (position_x, position_y))
+
     def handle_keyboard(self):
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -193,6 +216,10 @@ class Engine:
                     self.__tractor.move_up()
                 elif event.key == K_f:
                     self.do_things()
+                elif event.key == K_SPACE:
+                    self.harvest_plants()
+                elif event.key == K_d:
+                    self.deliver_plants()
                 elif event.key == K_g:
                     if self.barn_hitbox_collision_detection():
                         self.refill_tractor()
@@ -251,3 +278,17 @@ class Engine:
             if self.__tractor.if_refill_possible(stat):
                 tractor_stat_rate = self.__tractor.get_stat_rate_refill(stat)
                 self.__tractor.refill(stat, tractor_stat_rate)
+
+    def harvest_plants(self):
+        field = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+        index = len(field) - 1
+
+        if isinstance(field[index], AbstractHarvestablePlants):
+
+            if self.__tractor.get_plants_held() < 3 and field[index].is_grown():
+                self.__tractor.harvest()
+                field[index].regrow()
+
+    def deliver_plants(self):
+        self.__plant_score += self.__tractor.get_plants_held()
+        self.__tractor.deliver()

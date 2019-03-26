@@ -20,6 +20,8 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
         self.rect = self.image.get_rect()
 
+        self.__plants_held = 0
+        self.__inventory_size = 3
         # starting position
         # default is [1,1] in map matrix, upper left corner of map
         self.set_rect_by_index((1, 1))
@@ -130,3 +132,13 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
     def if_refill_possible(self, stat):
         return True if self.get_stats().get(stat)["level"] < 100 else False
+
+    def get_plants_held(self):
+        return self.__plants_held
+
+    def harvest(self):
+        if self.__plants_held < 3:
+            self.__plants_held += 1
+
+    def deliver(self):
+        self.__plants_held = 0
