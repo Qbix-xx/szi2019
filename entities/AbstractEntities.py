@@ -14,6 +14,9 @@ class AbstractEntities(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
+    def get_rect(self):
+        return self.rect
+
     def get_surface_image(self):
         return self.image
 

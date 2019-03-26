@@ -116,3 +116,17 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
             rate = self.get_stats().get(stat)["level"]
 
         return rate
+
+    def get_stat_rate_refill(self, stat):
+        rate = self.get_stats().get(stat)["rate"]
+
+        if self.get_stats().get(stat)["level"] + rate > 100:
+            rate = 100 - self.get_stats().get(stat)["level"]
+
+        return rate
+
+    def refill(self, stat, rate):
+        self.get_stats().get(stat)["level"] += rate
+
+    def if_refill_possible(self, stat):
+        return True if self.get_stats().get(stat)["level"] < 100 else False

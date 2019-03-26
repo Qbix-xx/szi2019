@@ -1,9 +1,9 @@
 import sys
 
 import pygame
-from entities.Barn import Barn
 from pygame.locals import *
 
+from entities.Barn import Barn
 from entities.Ground.AbstractHarvestablePlants import AbstractHarvestablePlants
 from entities.Ground.Grass import Grass
 from entities.Ground.Plant import Plant
@@ -26,6 +26,9 @@ class Engine:
 
         self.__init_sprites_group()
         self.__init_tractor()
+
+        # dev
+        self.barn = None
 
         # create game map from layout
         self.__game_map_init()
@@ -85,6 +88,7 @@ class Engine:
                     temp_object = Barn(i * 32 + i + 32, j * 32 + j + 32)
                     self.__game_map[i][j].append(temp_object)
                     self.__solid_sprite_group.add(temp_object)
+                    self.barn = temp_object
 
 
         self.__ground_sprite_group.add(self.__game_map)
@@ -189,8 +193,11 @@ class Engine:
                     self.__tractor.move_up()
                 elif event.key == K_f:
                     self.do_things()
+                elif event.key == K_g:
+                    if self.barn_hitbox_collision_detection():
+                        self.refill_tractor()
 
-                if self.collision_detection():
+                if self.tractor_collision_detection():
                     self.__tractor.set_rect(offset)
 
     def update_sprites(self):
@@ -221,7 +228,15 @@ class Engine:
 
                         self.__tractor.operation(stat, tractor_stat_rate)
 
-    def collision_detection(self):
+    def barn_hitbox_collision_detection(self):
+        flag = False
+
+        if self.barn.get_refill_hitbox().colliderect(self.__tractor.rect):
+            flag = True
+
+        return flag
+
+    def tractor_collision_detection(self):
         flag = False
 
         for object in self.__solid_sprite_group:
@@ -229,3 +244,10 @@ class Engine:
                 flag = True
 
         return flag
+
+    def refill_tractor(self):
+
+        for stat in self.__tractor.get_stats().keys():
+            if self.__tractor.if_refill_possible(stat):
+                tractor_stat_rate = self.__tractor.get_stat_rate_refill(stat)
+                self.__tractor.refill(stat, tractor_stat_rate)
