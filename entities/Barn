@@ -1,0 +1,8 @@
+from entities.AbstractEntities import AbstractEntities
+
+
+class Barn(AbstractEntities):
+    def __init__(self, x, y):
+        self.image = pygame.image.load("resources/sprites/barn2.png")
+
+        super().__init__("Barn", self.image, x, y)

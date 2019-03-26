@@ -1,6 +1,7 @@
 import sys
 
 import pygame
+from entities.Barn import Barn
 from pygame.locals import *
 
 from entities.Ground.AbstractHarvestablePlants import AbstractHarvestablePlants
@@ -80,6 +81,11 @@ class Engine:
                     temp_object = Tree(i * 32 + i + 32, j * 32 + j + 32)
                     self.__game_map[i][j].append(temp_object)
                     self.__solid_sprite_group.add(temp_object)
+                elif self.__mapLayoutFile[i][j] == "5":
+                    temp_object = Barn(i * 32 + i + 32, j * 32 + j + 32)
+                    self.__game_map[i][j].append(temp_object)
+                    self.__solid_sprite_group.add(temp_object)
+
 
         self.__ground_sprite_group.add(self.__game_map)
 
