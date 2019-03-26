@@ -12,14 +12,17 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         AbstractHarvestableInterface.__init__(self)
 
         self.__map_size = map_size
+        self.__spritesheet = {}
 
-        self.__sheet = pygame.image.load("resources/sprites/tractor_spritesheet.png").convert_alpha()
-        self.image = self.__sheet.subsurface(pygame.Rect(0, 0, 32, 32))
+        self.__init_spritesheet()
+
+        self.image = self.__spritesheet["right"]
+
         self.rect = self.image.get_rect()
 
         # starting position
         # default is [1,1] in map matrix, upper left corner of map
-        self.set_rect(1, 1)
+        self.set_rect_by_index((1, 1))
 
         # position in map matrix
         self.__index_x = int((self.rect.x - 32) / 32)
@@ -29,6 +32,17 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         self.__step = 32 + 1
 
         self.__init_stats()
+
+    def __init_spritesheet(self):
+        sheet = pygame.image.load("resources/sprites/tractor.png").convert_alpha()
+
+        self.__spritesheet = {
+            "left": pygame.transform.flip(sheet, True, False),
+            "right": sheet
+        }
+
+    def get_rect(self):
+        return self.rect
 
     def __init_stats(self):
         fertilizer = {
@@ -54,15 +68,20 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
     def get_index_y(self):
         return self.__index_y
 
-    def set_rect(self, x, y):
-        self.rect.x = x * 32
-        self.rect.y = y * 32
+    def set_rect_by_index(self, rect):
+        self.rect.x = rect[0] * 32
+        self.rect.y = rect[1] * 32
+
+    def set_rect(self, rect):
+        self.rect = rect
 
     def move_right(self):
         self.update_position(self.__step, 0)
+        self.image = self.__spritesheet["right"]
 
     def move_left(self):
         self.update_position(-self.__step, 0)
+        self.image = self.__spritesheet["left"]
 
     def move_down(self):
         self.update_position(0, self.__step)
@@ -97,3 +116,17 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
             rate = self.get_stats().get(stat)["level"]
 
         return rate
+
+    def get_stat_rate_refill(self, stat):
+        rate = self.get_stats().get(stat)["rate"]
+
+        if self.get_stats().get(stat)["level"] + rate > 100:
+            rate = 100 - self.get_stats().get(stat)["level"]
+
+        return rate
+
+    def refill(self, stat, rate):
+        self.get_stats().get(stat)["level"] += rate
+
+    def if_refill_possible(self, stat):
+        return True if self.get_stats().get(stat)["level"] < 100 else False
