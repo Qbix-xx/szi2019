@@ -143,7 +143,6 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         return self.__plants_held
 
     def harvest(self):
-        if self.__plants_held < 3:
             self.__plants_held += 1
 
     def deliver(self):

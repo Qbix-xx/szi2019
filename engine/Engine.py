@@ -25,25 +25,17 @@ class Engine:
         self.__init_sprites()
         self.__init_map(path_to_map_layout)
 
-    def __init_sprites(self):
-        self.__init_sprites_group()
-        self.__init_tractor()
-        self.barn = None
-        self.watercontainer = None
-
-
-
-
-        # create game map from layout
-        self.__game_map_init()
-
         # plants delivered in total
         self.__plant_score = 0
 
+    def __init_sprites(self):
+        self.__init_sprites_group()
+        self.__init_tractor()
 
     def __init_sprites_group(self):
         self.__ground_sprite_group = pygame.sprite.Group()
         self.__tractor_sprite_group = pygame.sprite.Group()
+        self.__plants_sprite_group = pygame.sprite.Group()
         self.__solid_sprite_group = pygame.sprite.Group()
 
     def __init_tractor(self):
@@ -57,16 +49,20 @@ class Engine:
         self.__game_map_init()
 
     def __set_fonts_and_colours(self):
-        self.__ground_name_font = pygame.font.SysFont('Helvetica', 30)
-        self.__ground_name_colour = (0, 0, 0)
+        self.__ground_text_header_font = pygame.font.SysFont('Helvetica', 30)
+        self.__ground_text_header_colour = (0, 0, 0)
         self.__ground_stats_font = pygame.font.SysFont('Helvetica', 20)
         self.__ground_stats_colour = (0, 0, 0)
 
-        self.__tractor_name_font = pygame.font.SysFont('Helvetica', 30)
-        self.__tractor_name_colour = (0, 0, 0)
+        self.__tractor_text_header_font = pygame.font.SysFont('Helvetica', 30)
+        self.__tractor_text_header_colour = (0, 0, 0)
         self.__tractor_stats_font = pygame.font.SysFont('Helvetica', 20)
         self.__tractor_stats_colour = (0, 0, 0)
 
+        self.__inventory_text_header_font = pygame.font.SysFont('Helvetica', 30)
+        self.__inventory_text_header_colour = (0, 0, 0)
+        self.__inventory_title_font = pygame.font.SysFont('Helvetica', 20)
+        self.__inventory_title_colour = (0, 0, 0)
 
         # TODO move it to dict
         ground_fonts_colours = {
@@ -88,13 +84,6 @@ class Engine:
             "tractor": tractor_fonts_colours
         }
 
-        self.__inventory_title_font = pygame.font.SysFont('Helvetica', 30)
-        self.__inventory_title_colour = (0, 0, 0)
-
-        self.__score_font = pygame.font.SysFont('Helvetica', 30)
-        self.__score_colour = (0, 0, 0)
-
-
     def __load_map_from_file(self, path):
         with open(path) as textfile:
             self.__mapLayoutFile = list(line.replace('\n', '').split(" ") for line in textfile)
@@ -104,6 +93,15 @@ class Engine:
         # mwiecek: init empty game map matrix
         self.__game_map = [[[]] * self.__MAP_SIZE for _ in range(self.__MAP_SIZE)]
 
+        self.__create_map_from_layout()
+
+        self.__ground_sprite_group.add(self.__game_map)
+
+    def __create_solid_object(self, i, j, object_to_add):
+        self.__game_map[i][j].append(object_to_add)
+        self.__solid_sprite_group.add(object_to_add)
+
+    def __create_map_from_layout(self):
         for i in range(self.__MAP_SIZE):
             for j in range(self.__MAP_SIZE):
 
@@ -115,29 +113,15 @@ class Engine:
                 elif self.__mapLayoutFile[i][j] == "2":
                     self.__tractor.set_rect_by_index((i, j))
                 elif self.__mapLayoutFile[i][j] == "3":
-                    # TODO
-                    temp_plant = Plant(i * 32 + i + 32, j * 32 + j + 32)
-                    self.plant_dev = temp_plant
-                    self.__game_map[i][j].append(temp_plant)
+                    temp = Plant(i * 32 + i + 32, j * 32 + j + 32)
+                    self.__game_map[i][j].append(temp)
+                    self.__plants_sprite_group.add(temp)
                 elif self.__mapLayoutFile[i][j] == "4":
-                    temp_object = Tree(i * 32 + i + 32, j * 32 + j + 32)
-                    self.__game_map[i][j].append(temp_object)
-                    self.__solid_sprite_group.add(temp_object)
+                    self.__create_solid_object(i, j, Tree(i * 32 + i + 32, j * 32 + j + 32))
                 elif self.__mapLayoutFile[i][j] == "5":
-                    temp_object = Barn(i * 32 + i + 32, j * 32 + j + 32)
-                    self.__game_map[i][j].append(temp_object)
-                    self.__solid_sprite_group.add(temp_object)
-                    self.barn = temp_object
-
-
+                    self.__create_solid_object(i, j, Barn(i * 32 + i + 32, j * 32 + j + 32))
                 elif self.__mapLayoutFile[i][j] == "6":
-                    temp_object = WaterContainer(i * 32 + i + 32, j * 32 + j + 32)
-                    self.__game_map[i][j].append(temp_object)
-                    self.__solid_sprite_group.add(temp_object)
-                    self.watercontainer = temp_object
-
-
-        self.__ground_sprite_group.add(self.__game_map)
+                    self.__create_solid_object(i, j, WaterContainer(i * 32 + i + 32, j * 32 + j + 32))
 
     def render(self, hScreen):
         # grey background
@@ -145,22 +129,14 @@ class Engine:
 
         # black background beneath map grid to make lines more visible
         pygame.draw.rect(hScreen, [0, 0, 0], (30, 30, 33 * self.__MAP_SIZE + 3, 33 * self.__MAP_SIZE + 3))
-        self.__render_ground_stats(hScreen)
+
         self.__render_interface(hScreen)
 
         # render sprites groups
         self.__ground_sprite_group.draw(hScreen)
         self.__tractor_sprite_group.draw(hScreen)
 
-    def __render_name_surface(self, font, colour, string_name, position_x, position_y, hScreen):
-        name_surface = font.render(
-            string_name,
-            True,
-            colour
-        )
-        hScreen.blit(name_surface, (position_x * 33, position_y * 33))
-
-    def __render_name_surface_dev(self, font, colour, string_name, position_x, position_y, hScreen):
+    def __render_text_header_surface(self, font, colour, string_name, position_x, position_y, hScreen):
         name_surface = font.render(
             string_name,
             True,
@@ -183,54 +159,23 @@ class Engine:
             iterator_over_stat_dict_key += 1
 
     def __render_interface(self, hScreen):
-        self.__render_name_surface(
-            self.__tractor_name_font,
-            self.__tractor_name_colour,
-            "Tractor Storage",
-            1, self.__MAP_SIZE + 2,
-            hScreen
-        )
+        self.__render_ground_stats_interface(hScreen)
+        self.__render_tractor_stats_interface(hScreen)
+        self.__render_inventory_interface(hScreen)
 
-        self.__render_stats_surface(
-            self.__tractor.get_stats(),
-            self.__tractor_stats_font,
-            self.__tractor_stats_colour,
-            1, self.__MAP_SIZE + 3,
-            hScreen
-        )
-
-        self.__render_inventory_text(
-            self.__inventory_title_font,
-            self.__inventory_title_colour,
-            "Plants held: " + str(self.__tractor.get_plants_held()) + "/3",
-            600,
-            300,
-            hScreen
-        )
-
-        self.__render_score_text(
-            self.__score_font,
-            self.__score_colour,
-            "Plants delivered: " + str(self.__plant_score),
-            600,
-            330,
-            hScreen
-        )
-
-    def __render_ground_stats(self, hScreen):
+    def __render_ground_stats_interface(self, hScreen):
 
         local_field_list = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
 
-        self.__render_name_surface(
-            self.__ground_name_font,
-            self.__ground_name_colour,
+        self.__render_text_header_surface(
+            self.__ground_text_header_font,
+            self.__ground_text_header_colour,
             local_field_list[len(local_field_list) - 1].get_name(),
             self.__MAP_SIZE + 4, 1,
             hScreen
         )
 
-        if isinstance(local_field_list[len(local_field_list) - 1],
-                      AbstractHarvestablePlants):
+        if isinstance(local_field_list[len(local_field_list) - 1], AbstractHarvestablePlants):
             self.__render_stats_surface(
                 local_field_list[len(local_field_list) - 1].get_stats(),
                 self.__ground_stats_font,
@@ -239,21 +184,47 @@ class Engine:
                 hScreen
             )
 
-    def __render_inventory_text(self, font, colour, string_name, position_x, position_y, hScreen):
-        name_surface = font.render(
-            string_name,
-            True,
-            colour
+    def __render_tractor_stats_interface(self, hScreen):
+        self.__render_stats_surface(
+            self.__tractor.get_stats(),
+            self.__tractor_stats_font,
+            self.__tractor_stats_colour,
+            1, self.__MAP_SIZE + 3,
+            hScreen
         )
-        hScreen.blit(name_surface, (position_x, position_y))
 
-    def __render_score_text(self, font, colour, string_name, position_x, position_y, hScreen):
-        name_surface = font.render(
-            string_name,
-            True,
-            colour
+        self.__render_text_header_surface(
+            self.__tractor_text_header_font,
+            self.__tractor_text_header_colour,
+            "Tractor Storage",
+            1, self.__MAP_SIZE + 2,
+            hScreen
         )
-        hScreen.blit(name_surface, (position_x, position_y))
+
+    def __render_inventory_interface(self, hScreen):
+        self.__render_text_header_surface(
+            self.__inventory_text_header_font,
+            self.__inventory_text_header_colour,
+            "Inventory",
+            self.__MAP_SIZE + 4, 10,
+            hScreen
+        )
+
+        self.__render_text_header_surface(
+            self.__inventory_title_font,
+            self.__inventory_title_colour,
+            "Plants held: " + str(self.__tractor.get_plants_held()) + "/3",
+            self.__MAP_SIZE + 4, 11,
+            hScreen
+        )
+
+        self.__render_text_header_surface(
+            self.__inventory_title_font,
+            self.__inventory_title_colour,
+            "Plants delivered: " + str(self.__plant_score),
+            self.__MAP_SIZE + 4, 12,
+            hScreen
+        )
 
     def handle_keyboard(self):
         for event in pygame.event.get():
@@ -278,22 +249,24 @@ class Engine:
                 elif event.key == K_d:
                     self.deliver_plants()
                 elif event.key == K_g:
-                    if self.barn_hitbox_collision_detection():
-                        self.refill_tractor()
+                    self.refill_tractor()
 
-                if self.tractor_collision_detection():
-                    self.__tractor.set_rect(offset)
+                # global collision detection
+                self.__check_tractor_collisions(offset)
+
+    def __check_tractor_collisions(self, offset):
+        if self.tractor_collision_detection():
+            self.__tractor.set_rect(offset)
 
     def update_sprites(self):
         if (pygame.time.get_ticks() - self.__start_time) / 1000 > 4:
             self.__start_time = pygame.time.get_ticks()
 
-            for ground_field in self.__ground_sprite_group:
-                if isinstance(ground_field, AbstractHarvestablePlants):
-                    ground_field.grow()
+            for plant in self.__plants_sprite_group:
+                plant.grow()
 
+        self.__plants_sprite_group.update()
         self.__tractor_sprite_group.update()
-        self.__ground_sprite_group.update()
 
     def do_things(self):
         field = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
@@ -312,26 +285,11 @@ class Engine:
 
                         self.__tractor.operation(stat, tractor_stat_rate)
 
-    def barn_hitbox_collision_detection(self):
-        flag = False
-
-        if self.barn.get_refill_hitbox().colliderect(self.__tractor.rect):
-            flag = True
-
-        return flag
-
-    def watercontainer_hitbox_collision_detection(self):
-        flag = False
-
-        if self.watercontainer.get_refill_hitbox().colliderect(self.__tractor.rect):
-            flag = True
-
-        return flag
     def tractor_collision_detection(self):
         flag = False
 
-        for object in self.__solid_sprite_group:
-            if object.is_collided_with(self.__tractor):
+        for solid_object in self.__solid_sprite_group:
+            if solid_object.is_collided_with(self.__tractor):
                 flag = True
 
         return flag
