@@ -20,6 +20,8 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
         self.rect = self.image.get_rect()
 
+        self.__plants_held = 0
+        self.__inventory_size = 3
         # starting position
         # default is [1,1] in map matrix, upper left corner of map
         self.set_rect_by_index((1, 1))
@@ -35,10 +37,14 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
     def __init_spritesheet(self):
         sheet = pygame.image.load("resources/sprites/tractor.png").convert_alpha()
+        sheet_back = pygame.image.load("resources/sprites/tractor_back.png").convert_alpha()
+        sheet_front = pygame.image.load("resources/sprites/tractor_front.png").convert_alpha()
 
         self.__spritesheet = {
             "left": pygame.transform.flip(sheet, True, False),
-            "right": sheet
+            "right": sheet,
+            "back": sheet_back,
+            "front": sheet_front
         }
 
     def get_rect(self):
@@ -85,9 +91,11 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
     def move_down(self):
         self.update_position(0, self.__step)
+        self.image = self.__spritesheet["front"]
 
     def move_up(self):
         self.update_position(0, -self.__step)
+        self.image = self.__spritesheet["front"]
 
     def update_position(self, step_x, step_y):
         if self.__check_if_update_position_possible(step_x, step_y):
@@ -130,3 +138,13 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
     def if_refill_possible(self, stat):
         return True if self.get_stats().get(stat)["level"] < 100 else False
+
+    def get_plants_held(self):
+        return self.__plants_held
+
+    def harvest(self):
+        if self.__plants_held < 3:
+            self.__plants_held += 1
+
+    def deliver(self):
+        self.__plants_held = 0

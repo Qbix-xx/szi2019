@@ -11,6 +11,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
     def __init__(self, name, spritesheet, x, y):
         self.__grow_stage_images = {}
         self.__current_clean_image = None
+        self.__progress = 0
         self.__grow_stage = 0
 
         self.__init_sprite_sheet(spritesheet)
@@ -58,6 +59,12 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.__update_stage_image()
         self.__handle_warnings()
 
+    def check_progress(self):
+        if self.__progress >= 3:
+            self.__progress = 0
+            if self.__grow_stage < 2:
+                self.__grow_stage += 1
+
     def grow(self):
         for stat in self.get_stats().values():
             if stat["level"] > 0:
@@ -65,7 +72,16 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
                 if stat["level"] <= 0:
                     stat["level"] = 0
 
-        self.__grow_stage += 1
+        self.__progress += 1
+        self.check_progress()
+
+    def is_grown(self):
+        return True if self.__grow_stage == 2 else False
+
+    def regrow(self):
+        self.__grow_stage = 0
+        self.__current_clean_image = self.get_grow_stage_images()[0].copy()
+        self.image = self.__current_clean_image
 
     def __update_stage_image(self):
         for stage in self.get_grow_stage_images():
