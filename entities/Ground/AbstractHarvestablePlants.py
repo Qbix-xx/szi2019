@@ -37,6 +37,8 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         }
 
         irrigation = {
+            # watered = Falsse
+            # irigated = False
             "level": 100,
             "warning_images": water_warning_image,
             "warning_level": 90,

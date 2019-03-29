@@ -134,6 +134,9 @@ class Engine:
 
         # render sprites groups
         self.__ground_sprite_group.draw(hScreen)
+        self.render_tractor(hScreen)
+
+    def render_tractor(self, hScreen):
         self.__tractor_sprite_group.draw(hScreen)
 
     def __render_text_header_surface(self, font, colour, string_name, position_x, position_y, hScreen):
@@ -259,7 +262,7 @@ class Engine:
             self.__tractor.set_rect(offset)
 
     def update_sprites(self):
-        if (pygame.time.get_ticks() - self.__start_time) / 1000 > 4:
+        if (pygame.time.get_ticks() - self.__start_time) / 1000 > 1:
             self.__start_time = pygame.time.get_ticks()
 
             for plant in self.__plants_sprite_group:

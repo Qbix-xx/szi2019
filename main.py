@@ -10,7 +10,7 @@ pygame.font.init()
 FPS = 30
 MAP_SIZE = 15      # in tiles
 WINDOW_SIZE = (MAP_SIZE + 1024, MAP_SIZE + 1024)
-PATH_TO_MAP = "resources/map_layouts/layout3.txt"
+PATH_TO_MAP = "resources/map_layouts/layout2.txt"
 # -----------------------
 
 # screen handle

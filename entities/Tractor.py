@@ -95,7 +95,7 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
     def move_up(self):
         self.update_position(0, -self.__step)
-        self.image = self.__spritesheet["front"]
+        self.image = self.__spritesheet["back"]
 
     def update_position(self, step_x, step_y):
         if self.__check_if_update_position_possible(step_x, step_y):
