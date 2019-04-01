@@ -77,11 +77,10 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
     def is_grown(self):
         return True if self.__grow_stage == 2 else False
 
-    def regrow(self):
-        self.__grow_stage = 0
-        self.__current_clean_image = self.get_grow_stage_images()[0].copy()
-        self.image = self.__current_clean_image
-        self.__reset_stats()
+    def get_harvested(self):
+        self.__grow_stage = 4
+        for stat in self.get_stats().values():
+            stat["warning_level"] = 0
 
     def __update_stage_image(self):
         for stage in self.get_grow_stage_images():
