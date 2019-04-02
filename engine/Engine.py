@@ -310,6 +310,7 @@ class Engine:
             if self.__tractor.get_plants_held() < 3 and field[index].is_grown():
                 self.__tractor.harvest()
                 field[index].get_harvested()
+                field[index].kill()
                 del field[index]
 
     def deliver_plants(self):

@@ -78,7 +78,6 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         return True if self.__grow_stage == 2 else False
 
     def get_harvested(self):
-        self.__grow_stage = 4
         for stat in self.get_stats().values():
             stat["warning_level"] = 0
 
