@@ -12,6 +12,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.__grow_stage_images = {}
         self.__current_clean_image = None
         self.__grow_stage = 0
+        self.__max_grow_stage = 0
 
         self.__init_sprite_sheet(spritesheet)
         super().__init__(name, spritesheet, x, y)
@@ -20,6 +21,8 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
     def __init_sprite_sheet(self, image):
         for i in range(0, int(image.get_width() / 32)):
             self.__grow_stage_images[i] = image.subsurface(pygame.Rect(i * 32, 0, 32, 32))
+
+        self.__max_grow_stage = len(self.__grow_stage_images) - 1
 
     def get_grow_stage_images(self):
         return self.__grow_stage_images
@@ -61,7 +64,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.__handle_warnings()
 
     def check_progress(self):
-        if self.__grow_stage < 2:
+        if self.__grow_stage < self.__max_grow_stage:
             self.__grow_stage += 1
 
     def grow(self):
@@ -73,8 +76,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.check_progress()
 
     def is_grown(self):
-        max_stage = len(self.__grow_stage_images) - 1
-        return True if self.__grow_stage == max_stage else False
+        return True if self.__grow_stage == self.__max_grow_stage else False
 
     def __update_stage_image(self):
         for stage in self.get_grow_stage_images():
