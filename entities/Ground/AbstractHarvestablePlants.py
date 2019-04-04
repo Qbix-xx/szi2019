@@ -53,10 +53,6 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
         self.set_stats(stats)
 
-    def __reset_stats(self):
-        for stat in self.get_stats().values():
-            stat["level"] = 100
-
     def get_grow_stage(self):
         return self.__grow_stage
 
@@ -116,7 +112,6 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
     def take_care(self, stat, capacity):
         self.get_stats().get(stat)["level"] += capacity
         self.__check_stat_level(stat)
-        # self.__check_stats_levels()
 
     def if_operation_possible(self, stat, capacity):
         return True if ((self.get_stats().get(stat)["level"] + capacity) <= 100) else False
