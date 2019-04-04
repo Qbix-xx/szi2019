@@ -40,7 +40,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         irrigation = {
             "level": 100,
             "warning_images": water_warning_image,
-            "warning_level": 90,
+            "warning_level": 50,
             "warning": False,
             "done": False,
             "rate": 10
@@ -88,15 +88,12 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.image = self.__current_clean_image
 
     def __handle_warnings(self):
-        self.__check_stats_levels()
+        self.__check_all_stat_level()
         self.__draw_warning()
 
-    def __check_stats_levels(self):
-        for stat in self.get_stats().values():
-            if stat["level"] <= stat["warning_level"]:
-                stat["warning"] = True
-            else:
-                stat["warning"] = False
+    def __check_all_stat_level(self):
+        for stat in self.get_stats():
+            self.__check_stat_level(stat)
 
     def __check_stat_level(self, stat):
         stat = self.get_stats()[stat]
