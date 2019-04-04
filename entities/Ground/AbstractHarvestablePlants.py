@@ -77,7 +77,8 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.check_progress()
 
     def is_grown(self):
-        return True if self.__grow_stage == 2 else False
+        max_stage = len(self.__grow_stage_images) - 1
+        return True if self.__grow_stage == max_stage else False
 
     def __update_stage_image(self):
         for stage in self.get_grow_stage_images():
@@ -97,6 +98,13 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
             else:
                 stat["warning"] = False
 
+    def __check_stat_level(self, stat):
+        stat = self.get_stats()[stat]
+        if stat["level"] <= stat["warning_level"]:
+            stat["warning"] = True
+        else:
+            stat["warning"] = False
+
     def __draw_warning(self):
 
         counter = 0
@@ -110,7 +118,8 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
     def take_care(self, stat, capacity):
         self.get_stats().get(stat)["level"] += capacity
-        self.__check_stats_levels()
+        self.__check_stat_level(stat)
+        # self.__check_stats_levels()
 
     def if_operation_possible(self, stat, capacity):
         return True if ((self.get_stats().get(stat)["level"] + capacity) <= 100) else False

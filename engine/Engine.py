@@ -271,6 +271,7 @@ class Engine:
         self.__plants_sprite_group.update()
         self.__tractor_sprite_group.update()
 
+    # TODO: change name of this method
     def do_things(self):
         field = self.__game_map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
         index = len(field) - 1
