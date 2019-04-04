@@ -36,15 +36,13 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         self.__init_stats()
 
     def __init_spritesheet(self):
-        sheet = pygame.image.load("resources/sprites/tractor.png").convert_alpha()
-        sheet_back = pygame.image.load("resources/sprites/tractor_back.png").convert_alpha()
-        sheet_front = pygame.image.load("resources/sprites/tractor_front.png").convert_alpha()
+        sheet = pygame.image.load("resources/sprites/tractor_spritesheet.png").convert_alpha()
 
         self.__spritesheet = {
-            "left": pygame.transform.flip(sheet, True, False),
-            "right": sheet,
-            "back": sheet_back,
-            "front": sheet_front
+            "left": sheet.subsurface(pygame.Rect(0 * 32, 0, 32, 32)),
+            "right": sheet.subsurface(pygame.Rect(1 * 32, 0, 32, 32)),
+            "back": sheet.subsurface(pygame.Rect(2 * 32, 0, 32, 32)),
+            "front": sheet.subsurface(pygame.Rect(3 * 32, 0, 32, 32))
         }
 
     def get_rect(self):

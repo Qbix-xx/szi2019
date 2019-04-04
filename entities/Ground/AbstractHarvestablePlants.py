@@ -33,16 +33,16 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
             "warning_images": fertilizer_warning_image,
             "warning_level": 80,
             "warning": False,
+            "done": False,
             "rate": 10
         }
 
         irrigation = {
-            # watered = Falsse
-            # irigated = False
             "level": 100,
             "warning_images": water_warning_image,
             "warning_level": 90,
             "warning": False,
+            "done": False,
             "rate": 10
         }
 
@@ -78,10 +78,6 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
     def is_grown(self):
         return True if self.__grow_stage == 2 else False
-
-    def get_harvested(self):
-        for stat in self.get_stats().values():
-            stat["warning_level"] = 0
 
     def __update_stage_image(self):
         for stage in self.get_grow_stage_images():
