@@ -68,12 +68,31 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
             self.__grow_stage += 1
 
     def grow(self):
-        for stat in self.get_stats().values():
+        if self.get_stats()["irrigation"]["done"] == False:
+            stat = self.get_stats()["irrigation"]
             stat["level"] -= stat["rate"]
             if stat["level"] <= 0:
                 stat["level"] = 0
 
+            if stat["done"] and self.get_stats()["fertilizer"]["done"]:
+                stat = self.get_stats()["fertilizer"]
+                stat["level"] -= stat["rate"]
+                if stat["level"] <= 0:
+                    stat["level"] = 0
+
+        ##dev_end
+        # for stat in self.get_stats().values():
+        #     stat["level"] -= stat["rate"]
+        #     if stat["level"] <= 0:
+        #         stat["level"] = 0
+        #
         self.check_progress()
+
+    def __grow_first_stage(self):
+        a = 1
+
+    def __grow_second_stage(self):
+        a = 1
 
     def is_grown(self):
         return True if self.__grow_stage == self.__max_grow_stage else False

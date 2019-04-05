@@ -22,6 +22,9 @@ class Engine:
         # set fonts for rendering text
         self.__set_fonts_and_colours()
 
+        self.__barn = None
+        self.__watercontainer = None
+
         self.__init_sprites()
         self.__init_map(path_to_map_layout)
 
@@ -119,9 +122,11 @@ class Engine:
                 elif self.__mapLayoutFile[i][j] == "4":
                     self.__create_solid_object(i, j, Tree(i * 32 + i + 32, j * 32 + j + 32))
                 elif self.__mapLayoutFile[i][j] == "5":
-                    self.__create_solid_object(i, j, Barn(i * 32 + i + 32, j * 32 + j + 32))
+                    self.__barn = Barn(i * 32 + i + 32, j * 32 + j + 32)
+                    self.__create_solid_object(i, j, self.__barn)
                 elif self.__mapLayoutFile[i][j] == "6":
-                    self.__create_solid_object(i, j, WaterContainer(i * 32 + i + 32, j * 32 + j + 32))
+                    self.__watercontainer = WaterContainer(i * 32 + i + 32, j * 32 + j + 32)
+                    self.__create_solid_object(i, j, self.__watercontainer)
 
     def render(self, hScreen):
         # grey background
@@ -252,7 +257,8 @@ class Engine:
                 elif event.key == K_d:
                     self.deliver_plants()
                 elif event.key == K_g:
-                    self.refill_tractor()
+                    if self.barn_hitbox_collision_detection():
+                        self.refill_tractor()
 
                 # global collision detection
                 self.__check_tractor_collisions(offset)
@@ -319,3 +325,21 @@ class Engine:
     def deliver_plants(self):
         self.__plant_score += self.__tractor.get_plants_held()
         self.__tractor.deliver()
+
+    # TODO: make one method for this
+    def barn_hitbox_collision_detection(self):
+        flag = False
+
+        if self.__barn.get_refill_hitbox().colliderect(self.__tractor.rect):
+            flag = True
+
+        return flag
+
+    # TODO and this
+    def watercontainer_hitbox_collision_detection(self):
+        flag = False
+
+        if self.__watercontainer.get_refill_hitbox().colliderect(self.__tractor.rect):
+            flag = True
+
+        return flag
