@@ -9,7 +9,7 @@ pygame.font.init()
 # -------editables-------
 FPS = 30
 MAP_SIZE = 15      # in tiles
-WINDOW_SIZE = (MAP_SIZE * 33 + 400 , MAP_SIZE * 33 + 300)
+WINDOW_SIZE = (MAP_SIZE * 33 + 450 , MAP_SIZE * 33 + 300)
 PATH_TO_MAP = "resources/map_layouts/layout2.txt"
 # -----------------------
 

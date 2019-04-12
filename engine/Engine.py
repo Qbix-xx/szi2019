@@ -158,8 +158,7 @@ class Engine:
         for stat in dict.keys():
             stats_surface = font.render(
                 str(stat) + ": "
-                + str(dict.get(stat)["level"])
-                + "%",
+                + str(dict.get(stat)),
                 True,
                 colour
             )
@@ -185,8 +184,16 @@ class Engine:
         )
 
         if isinstance(local_field_list[len(local_field_list) - 1], AbstractHarvestablePlants):
+
+            temp_stats = local_field_list[len(local_field_list) - 1].get_stats()
+
+            dict_to_display = {
+                "watered": temp_stats["irrigation"]["done"],
+                "fertilized": temp_stats["fertilizer"]["done"]
+            }
+
             self.__render_stats_surface(
-                local_field_list[len(local_field_list) - 1].get_stats(),
+                dict_to_display,
                 self.__ground_stats_font,
                 self.__ground_stats_colour,
                 self.__MAP_SIZE + 4, 2,
@@ -194,8 +201,16 @@ class Engine:
             )
 
     def __render_tractor_stats_interface(self, hScreen):
+
+        temp_stats = self.__tractor.get_stats()
+
+        dict_to_display = {
+            "irrigation": temp_stats["irrigation"]["level"],
+            "fertilizer": temp_stats["fertilizer"]["level"]
+        }
+
         self.__render_stats_surface(
-            self.__tractor.get_stats(),
+            dict_to_display,
             self.__tractor_stats_font,
             self.__tractor_stats_colour,
             1, self.__MAP_SIZE + 3,
