@@ -52,19 +52,19 @@ class Engine:
         self.__game_map_init()
 
     def __set_fonts_and_colours(self):
-        self.__ground_text_header_font = pygame.font.SysFont('Helvetica', 30)
+        self.__ground_text_header_font = pygame.font.SysFont('showcardgothic', 30)
         self.__ground_text_header_colour = (0, 0, 0)
-        self.__ground_stats_font = pygame.font.SysFont('Helvetica', 20)
+        self.__ground_stats_font = pygame.font.SysFont('unispacebold', 20)
         self.__ground_stats_colour = (0, 0, 0)
 
-        self.__tractor_text_header_font = pygame.font.SysFont('Helvetica', 30)
+        self.__tractor_text_header_font = pygame.font.SysFont('showcardgothic', 30)
         self.__tractor_text_header_colour = (0, 0, 0)
-        self.__tractor_stats_font = pygame.font.SysFont('Helvetica', 20)
+        self.__tractor_stats_font = pygame.font.SysFont('unispacebold', 20)
         self.__tractor_stats_colour = (0, 0, 0)
 
-        self.__inventory_text_header_font = pygame.font.SysFont('Helvetica', 30)
+        self.__inventory_text_header_font = pygame.font.SysFont('showcardgothic', 30)
         self.__inventory_text_header_colour = (0, 0, 0)
-        self.__inventory_title_font = pygame.font.SysFont('Helvetica', 20)
+        self.__inventory_title_font = pygame.font.SysFont('unispacebold', 20)
         self.__inventory_title_colour = (0, 0, 0)
 
         # TODO move it to dict
@@ -154,6 +154,7 @@ class Engine:
 
     def __render_stats_surface(self, dict, font, colour, position_x, position_y, hScreen):
         iterator_over_stat_dict_key = 0
+
         for stat in dict.keys():
             stats_surface = font.render(
                 str(stat) + ": "
@@ -257,8 +258,10 @@ class Engine:
                 elif event.key == K_d:
                     self.deliver_plants()
                 elif event.key == K_g:
-                    if self.barn_hitbox_collision_detection():
-                        self.refill_tractor()
+                    if self.refill_collision_detection() == "BARN":
+                        self.refill_tractor("fertilizer")
+                    elif self.refill_collision_detection() == "WATER":
+                        self.refill_tractor("irrigation")
 
                 # global collision detection
                 self.__check_tractor_collisions(offset)
@@ -304,10 +307,9 @@ class Engine:
 
         return flag
 
-    def refill_tractor(self):
-
+    def refill_tractor(self, refill_type):
         for stat in self.__tractor.get_stats().keys():
-            if self.__tractor.if_refill_possible(stat):
+            if stat == refill_type and self.__tractor.if_refill_possible(stat):
                 tractor_stat_rate = self.__tractor.get_stat_rate_refill(stat)
                 self.__tractor.refill(stat, tractor_stat_rate)
 
@@ -327,19 +329,12 @@ class Engine:
         self.__tractor.deliver()
 
     # TODO: make one method for this
-    def barn_hitbox_collision_detection(self):
-        flag = False
+    def refill_collision_detection(self):
+        flag = None
 
         if self.__barn.get_refill_hitbox().colliderect(self.__tractor.rect):
-            flag = True
-
-        return flag
-
-    # TODO and this
-    def watercontainer_hitbox_collision_detection(self):
-        flag = False
-
-        if self.__watercontainer.get_refill_hitbox().colliderect(self.__tractor.rect):
-            flag = True
+            flag = "BARN"
+        elif self.__watercontainer.get_refill_hitbox().colliderect(self.__tractor.rect):
+            flag = "WATER"
 
         return flag
