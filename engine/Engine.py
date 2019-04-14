@@ -186,10 +186,14 @@ class Engine:
         if isinstance(local_field_list[len(local_field_list) - 1], AbstractHarvestablePlants):
 
             temp_stats = local_field_list[len(local_field_list) - 1].get_stats()
+            plant_stage = local_field_list[len(local_field_list) - 1].get_grow_stage()
 
             dict_to_display = {
-                "watered": temp_stats["irrigation"]["done"],
-                "fertilized": temp_stats["fertilizer"]["done"]
+                "Watered": temp_stats["irrigation"]["done"],
+                "Fertilized": temp_stats["fertilizer"]["done"],
+                "Growth stage": plant_stage+1,
+                "irrigation": temp_stats["irrigation"]["level"],
+                "fertilizer": temp_stats["fertilizer"]["level"]
             }
 
             self.__render_stats_surface(
@@ -286,7 +290,7 @@ class Engine:
             self.__tractor.set_rect(offset)
 
     def update_sprites(self):
-        if (pygame.time.get_ticks() - self.__start_time) / 1000 > 1:
+        if (pygame.time.get_ticks() - self.__start_time) / 2000 > 1:
             self.__start_time = pygame.time.get_ticks()
 
             for plant in self.__plants_sprite_group:
@@ -343,7 +347,6 @@ class Engine:
         self.__plant_score += self.__tractor.get_plants_held()
         self.__tractor.deliver()
 
-    # TODO: make one method for this
     def refill_collision_detection(self):
         flag = None
 

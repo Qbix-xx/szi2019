@@ -132,7 +132,9 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
     def take_care(self, stat, capacity):
         self.get_stats().get(stat)["level"] += capacity
+        self.get_stats().get(stat)["done"] = True
         self.__check_stat_level(stat)
 
     def if_operation_possible(self, stat, capacity):
-        return True if ((self.get_stats().get(stat)["level"] + capacity) <= 100) else False
+        return True if ((self.get_stats().get(stat)["level"] + capacity) <= 100) and\
+                       self.get_stats()[stat]["warning"] else False
