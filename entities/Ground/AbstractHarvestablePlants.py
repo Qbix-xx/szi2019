@@ -12,7 +12,8 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.__grow_stage_images = {}
         self.__current_clean_image = None
         self.__grow_stage = 0
-        self.__max_grow_stage = 0
+        self.__max_grow_stage = 3
+        self.__last_stage_growth = 0  # goes from 100 to 0 on stage 2 before getting to the last stage
 
         self.__init_sprite_sheet(spritesheet)
         super().__init__(name, spritesheet, x, y)
@@ -22,7 +23,8 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         for i in range(0, int(image.get_width() / 32)):
             self.__grow_stage_images[i] = image.subsurface(pygame.Rect(i * 32, 0, 32, 32))
 
-        self.__max_grow_stage = len(self.__grow_stage_images) - 1
+        # self.__max_grow_stage = len(self.__grow_stage_images) - 1
+        # uncomment in case we end up having the last growth stage sprite.
 
     def get_grow_stage_images(self):
         return self.__grow_stage_images
@@ -64,21 +66,37 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.__handle_warnings()
 
     def check_progress(self):
-        if self.__grow_stage < self.__max_grow_stage:
-            self.__grow_stage += 1
+        if self.__grow_stage == 0:
+            if self.get_stats()["irrigation"]["done"] is True and self.get_stats()["irrigation"]["level"] == 0:
+                self.__grow_stage += 1
+                self.get_stats()["irrigation"]["warning"] = False
+        elif self.__grow_stage == 1:
+            if self.get_stats()["fertilizer"]["done"] is True and self.get_stats()["fertilizer"]["level"] == 0:
+                self.__grow_stage += 1
+                self.get_stats()["fertilizer"]["warning"] = False
+        elif self.__grow_stage == 2:
+            if self.__last_stage_growth == 100:
+                self.__grow_stage += 1
+        elif self.__grow_stage == 3:
+            pass
 
     def grow(self):
-        if self.get_stats()["irrigation"]["done"] == False:
+        if self.__grow_stage == 0:
             stat = self.get_stats()["irrigation"]
             stat["level"] -= stat["rate"]
             if stat["level"] <= 0:
                 stat["level"] = 0
 
-            if stat["done"] and self.get_stats()["fertilizer"]["done"]:
-                stat = self.get_stats()["fertilizer"]
-                stat["level"] -= stat["rate"]
-                if stat["level"] <= 0:
-                    stat["level"] = 0
+        if self.__grow_stage == 1:
+            stat = self.get_stats()["fertilizer"]
+            stat["level"] -= stat["rate"]
+            if stat["level"] <= 0:
+                stat["level"] = 0
+
+        if self.__grow_stage == 2:
+            self.__last_stage_growth += 10
+            if self.__last_stage_growth >= 100:
+                self.__last_stage_growth = 100
 
         ##dev_end
         # for stat in self.get_stats().values():
@@ -89,10 +107,10 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.check_progress()
 
     def __grow_first_stage(self):
-        a = 1
+        a = 1 #???
 
     def __grow_second_stage(self):
-        a = 1
+        a = 1 #???
 
     def is_grown(self):
         return True if self.__grow_stage == self.__max_grow_stage else False
@@ -105,8 +123,9 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.image = self.__current_clean_image
 
     def __handle_warnings(self):
-        self.__check_all_stat_level()
-        self.__draw_warning()
+        if self.__grow_stage == 0 or self.__grow_stage == 1:
+            self.__check_all_stat_level()
+            self.__draw_warning()
 
     def __check_all_stat_level(self):
         for stat in self.get_stats():
@@ -114,7 +133,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
     def __check_stat_level(self, stat):
         stat = self.get_stats()[stat]
-        if stat["level"] <= stat["warning_level"]:
+        if stat["level"] <= stat["warning_level"] and stat["done"] == False:
             stat["warning"] = True
         else:
             stat["warning"] = False
@@ -136,5 +155,13 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.__check_stat_level(stat)
 
     def if_operation_possible(self, stat, capacity):
-        return True if ((self.get_stats().get(stat)["level"] + capacity) <= 100) and\
-                       self.get_stats()[stat]["warning"] else False
+        if self.get_grow_stage() == 0 and stat == "irrigation":
+            return True if ((self.get_stats().get(stat)["level"] + capacity) <= 100) and\
+                       self.get_stats()[stat]["warning"] and\
+                           self.get_stats()[stat]["done"] == False else False
+        elif self.get_grow_stage() == 1 and stat == "fertilizer":
+            return True if ((self.get_stats().get(stat)["level"] + capacity) <= 100) and\
+                           self.get_stats()[stat]["warning"] and\
+                           self.get_stats()[stat]["done"] == False else False
+        else:
+            return False
