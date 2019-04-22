@@ -277,10 +277,7 @@ class Engine:
                 elif event.key == K_d:
                     self.deliver_plants()
                 elif event.key == K_g:
-                    if self.refill_collision_detection() == "BARN":
-                        self.refill_tractor("fertilizer")
-                    elif self.refill_collision_detection() == "WATER":
-                        self.refill_tractor("irrigation")
+                    self.refill_tractor()
 
                 # global collision detection
                 self.__check_tractor_collisions(offset)
@@ -326,7 +323,12 @@ class Engine:
 
         return flag
 
-    def refill_tractor(self, refill_type):
+    def refill_tractor(self):
+        if self.refill_collision_detection() == "BARN":
+            refill_type = "fertilizer"
+        elif self.refill_collision_detection() == "WATER":
+            refill_type = "irrigation"
+
         for stat in self.__tractor.get_stats().keys():
             if stat == refill_type and self.__tractor.if_refill_possible(stat):
                 tractor_stat_rate = self.__tractor.get_stat_rate_refill(stat)
