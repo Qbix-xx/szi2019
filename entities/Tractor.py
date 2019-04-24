@@ -113,7 +113,7 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         self.get_stats().get(stat)["level"] -= rate
 
     def if_operation_possible(self, stat):
-        return True if self.get_stats().get(stat)["level"] >= 0 else False
+        return True if self.get_stats().get(stat)["level"] > 0 else False
 
     def get_stat_rate(self, stat):
         rate = self.get_stats().get(stat)["rate"]
