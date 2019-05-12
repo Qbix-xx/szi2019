@@ -72,6 +72,12 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
     def get_index_y(self):
         return self.__index_y
 
+    def set_index_x(self, newX):
+        self.__index_x = newX
+
+    def set_index_y(self, newY):
+        self.__index_y = newY
+
     def set_rect_by_index(self, rect):
         self.rect.x = rect[0] * 33 + 33
         self.rect.y = rect[1] * 33 + 33

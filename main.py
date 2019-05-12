@@ -8,9 +8,10 @@ pygame.font.init()
 # TODO create config
 # -------editables-------
 FPS = 30
-MAP_SIZE = 15      # in tiles
-WINDOW_SIZE = (MAP_SIZE * 33 + 450 , MAP_SIZE * 33 + 300)
 PATH_TO_MAP = "resources/map_layouts/layout2.txt"
+DEFAULT_MAP = "layout2.txt"
+DEFAULT_MAP_SIZE = 15      # in tiles
+WINDOW_SIZE = (DEFAULT_MAP_SIZE * 33 + 450 , DEFAULT_MAP_SIZE * 33 + 300)
 # -----------------------
 
 # screen handle
@@ -21,12 +22,13 @@ pygame.display.set_caption('Czerwony ciągnik')
 fpsClock = pygame.time.Clock()
 
 # create and init game engine
-engine = Engine(MAP_SIZE, PATH_TO_MAP)
+engine = Engine(DEFAULT_MAP)
 
 while True:
     # handle keyboard input
     engine.handle_keyboard()
 
+    engine.handle_dfs()
     # update sprites
     engine.update_sprites()
 

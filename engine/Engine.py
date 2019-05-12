@@ -1,5 +1,6 @@
 import sys
-
+import os
+import copy
 import pygame
 from pygame.locals import *
 
@@ -12,24 +13,42 @@ from entities.Ground.Tree import Tree
 from entities.Tractor import Tractor
 from entities.WaterContainer import WaterContainer
 
+from .MapManager import *
 
 class Engine:
-    def __init__(self, map_size, path_to_map_layout):
+    def __init__(self, map_layout):
+        self.__all_inits_with_map_layout(map_layout)
 
-        self.__MAP_SIZE = map_size
-        self.__start_time = pygame.time.get_ticks()
+    def __all_inits_with_map_layout(self, map_layout):
+        self.map_manager = MapManager(
+        os.path.join("resources", "map_layouts"),
+            map_layout)
+        try:
+            self.map_manager.load_map("default")
+        except:
+            print("Couldn't load map: " + self.map_manager.get_current_map_name())
 
-        # set fonts for rendering text
+        self.__MAP_SIZE = self.map_manager.get_current_map_size()
+
+        self.__barns = []
+        self.__watercontainers = []
+
         self.__set_fonts_and_colours()
 
-        self.__barn = None
-        self.__watercontainer = None
-
         self.__init_sprites()
-        self.__init_map(path_to_map_layout)
+        self.__init_map()
+        self.__selected_map_idx = self.map_manager.get_current_map_idx()
 
         # plants delivered in total
         self.__plant_score = 0
+        self.__plant_score_goal = len(self.__plants_sprite_group.sprites())
+
+        self.__mode = "manual"
+        self.__dfs_solutions = []
+        self.__dfs_current_steps = []
+        self.__dfs_all_steps = []
+
+        self.__start_time = pygame.time.get_ticks()
 
     def __init_sprites(self):
         self.__init_sprites_group()
@@ -45,9 +64,9 @@ class Engine:
         self.__tractor = Tractor(self.__MAP_SIZE)
         self.__tractor_sprite_group.add(self.__tractor)
 
-    def __init_map(self, path_to_map_layout):
-        self.__load_map_from_file(path_to_map_layout)
-
+    def __init_map(self):
+       #self.__load_map_from_file(path_to_map_layout)
+        self.__load_map_from_map_manager()
         # create game map from layout
         self.__game_map_init()
 
@@ -66,6 +85,15 @@ class Engine:
         self.__inventory_text_header_colour = (0, 0, 0)
         self.__inventory_title_font = pygame.font.SysFont('unispacebold', 20)
         self.__inventory_title_colour = (0, 0, 0)
+
+        self.__current_map_color = (220, 20, 60)
+        self.__selected_map_color = (255, 215, 0)
+
+        if self.map_manager.current_map_size < 10:
+            dif = 15 - self.map_manager.current_map_size + 2
+            self.__right_column_pos = self.map_manager.current_map_size + dif
+        else:
+            self.__right_column_pos = self.map_manager.current_map_size + 4
 
         # TODO move it to dict
         ground_fonts_colours = {
@@ -87,9 +115,12 @@ class Engine:
             "tractor": tractor_fonts_colours
         }
 
-    def __load_map_from_file(self, path):
-        with open(path) as textfile:
-            self.__mapLayoutFile = list(line.replace('\n', '').split(" ") for line in textfile)
+    #def __load_map_from_file(self, path):
+     #   with open(path) as textfile:
+      #      self.__mapLayoutFile = list(line.replace('\n', '').split(" ") for line in textfile)
+
+    def __load_map_from_map_manager(self):
+        self.__mapLayoutFile = self.map_manager.get_current_map_layout()
 
     def __game_map_init(self):
         # list of lists (2d grid) containing all the objects on the map
@@ -122,11 +153,11 @@ class Engine:
                 elif self.__mapLayoutFile[i][j] == "4":
                     self.__create_solid_object(i, j, Tree(i * 32 + i + 32, j * 32 + j + 32))
                 elif self.__mapLayoutFile[i][j] == "5":
-                    self.__barn = Barn(i * 32 + i + 32, j * 32 + j + 32)
-                    self.__create_solid_object(i, j, self.__barn)
+                    self.__barns.append(Barn(i * 32 + i + 32, j * 32 + j + 32))
+                    self.__create_solid_object(i, j, self.__barns[len(self.__watercontainers) - 1])
                 elif self.__mapLayoutFile[i][j] == "6":
-                    self.__watercontainer = WaterContainer(i * 32 + i + 32, j * 32 + j + 32)
-                    self.__create_solid_object(i, j, self.__watercontainer)
+                    self.__watercontainers.append(WaterContainer(i * 32 + i + 32, j * 32 + j + 32))
+                    self.__create_solid_object(i, j, self.__watercontainers[len(self.__watercontainers) - 1])
 
     def render(self, hScreen):
         # grey background
@@ -170,6 +201,8 @@ class Engine:
         self.__render_ground_stats_interface(hScreen)
         self.__render_tractor_stats_interface(hScreen)
         self.__render_inventory_interface(hScreen)
+        self.__render_map_list(hScreen)
+        self.__render_mode(hScreen)
 
     def __render_ground_stats_interface(self, hScreen):
 
@@ -179,7 +212,7 @@ class Engine:
             self.__ground_text_header_font,
             self.__ground_text_header_colour,
             local_field_list[len(local_field_list) - 1].get_name(),
-            self.__MAP_SIZE + 4, 1,
+            self.__right_column_pos, 1,
             hScreen
         )
 
@@ -200,7 +233,7 @@ class Engine:
                 dict_to_display,
                 self.__ground_stats_font,
                 self.__ground_stats_colour,
-                self.__MAP_SIZE + 4, 2,
+                self.__right_column_pos, 2,
                 hScreen
             )
 
@@ -234,7 +267,7 @@ class Engine:
             self.__inventory_text_header_font,
             self.__inventory_text_header_colour,
             "Inventory",
-            self.__MAP_SIZE + 4, 10,
+            10, self.__MAP_SIZE + 2,
             hScreen
         )
 
@@ -242,7 +275,7 @@ class Engine:
             self.__inventory_title_font,
             self.__inventory_title_colour,
             "Plants held: " + str(self.__tractor.get_plants_held()) + "/3",
-            self.__MAP_SIZE + 4, 11,
+            10, self.__MAP_SIZE + 3,
             hScreen
         )
 
@@ -250,7 +283,43 @@ class Engine:
             self.__inventory_title_font,
             self.__inventory_title_colour,
             "Plants delivered: " + str(self.__plant_score),
-            self.__MAP_SIZE + 4, 12,
+            10, self.__MAP_SIZE + 4,
+            hScreen
+        )
+
+    def __render_map_list(self, hScreen):
+        maps = self.map_manager.get_map_list()
+        self.__render_text_header_surface(
+            self.__inventory_text_header_font,
+            self.__inventory_text_header_colour,
+            "Map list",
+            self.__right_column_pos, 5,
+            hScreen
+        )
+
+        yPos = 5
+        for map in maps:
+            yPos = yPos + 1
+            if map == self.map_manager.current_map_name:
+                color = self.__current_map_color
+            elif map == maps[self.__selected_map_idx]:
+                color = self.__selected_map_color
+            else:
+                color = self.__inventory_title_colour
+            self.__render_text_header_surface(
+                self.__inventory_title_font,
+                color,
+                map,
+                self.__right_column_pos, yPos,
+                hScreen
+            )
+
+    def __render_mode(self, hScreen):
+        self.__render_text_header_surface(
+            self.__inventory_text_header_font,
+            self.__inventory_text_header_colour,
+            "Mode: " + self.__mode,
+            1, self.__MAP_SIZE + 6,
             hScreen
         )
 
@@ -279,6 +348,22 @@ class Engine:
                 elif event.key == K_g:
                     self.refill_tractor()
 
+                elif event.key == K_PAGEUP:
+                    self.__selected_map_idx = self.__selected_map_idx - 1
+                    if self.__selected_map_idx < 0:
+                        self.__selected_map_idx = len(self.map_manager.get_map_list()) - 1
+                elif event.key == K_PAGEDOWN:
+                    self.__selected_map_idx = self.__selected_map_idx + 1
+                    if self.__selected_map_idx >= len(self.map_manager.get_map_list()):
+                        self.__selected_map_idx = 0
+                elif event.key == K_RETURN:
+                    self.__all_inits_with_map_layout(self.map_manager.get_map_layout_name_with_idx(self.__selected_map_idx))
+
+                elif event.key == K_m:
+                    if self.__mode == "manual":
+                        self.__mode = "auto"
+                    else:
+                        self.__mode = "manual"
                 # global collision detection
                 self.__check_tractor_collisions(offset)
 
@@ -358,3 +443,102 @@ class Engine:
             flag = "WATER"
 
         return flag
+
+        return None
+
+    def handle_dfs(self):
+        if self.__mode == "manual":
+            return
+
+        grid = self.__game_map.copy()
+        tractor = copy.copy(self.__tractor)
+        grid[tractor.get_index_x()][tractor.get_index_y()].append(tractor)
+        self.dfs_find(grid, self.__dfs_all_steps, tractor)
+
+    def dfs_find(self, grid, current_steps, tractor):
+        if self.__plant_score == self.__plant_score_goal:
+            self.__dfs_solutions.append(self.__dfs_current_steps)
+
+        if len(self.__dfs_solutions) >= 10:
+            return
+        else:
+            if len(self.__dfs_all_steps) == 0:
+                s = None
+            else:
+                s = self.__dfs_all_steps[-1]
+            for step in self.possible_steps(grid, s, tractor):
+                new_current_steps = current_steps
+                new_current_steps.append(step)
+
+                new_grid = self.modify_grid(grid.copy(), step, tractor)
+                self.dfs_find(new_grid, new_current_steps, tractor)
+
+    def possible_steps(self, grid, last_step, tractor):
+        steps = {"L", "R", "U", "D", "i", "f", "h", "e"}
+        if last_step in {"i", "f", "h", "e"}:
+            steps.remove(last_step)
+
+        if last_step == "L":
+            steps.remove("R")
+        elif last_step == "R":
+            steps.remove("L")
+        elif last_step == "U":
+            steps.remove("D")
+        elif last_step == "D":
+            steps.remove("U")
+
+        # todo check collisions
+
+        if tractor.get_index_x() - 1 < 0 or any(isinstance(sprite, Tree) for sprite in grid[tractor.get_index_x() - 1][tractor.get_index_y()]):
+            try:
+                steps.remove("U")
+            except:
+                pass
+        if tractor.get_index_x() + 1 >= self.map_manager.current_map_size or any(isinstance(sprite, Tree) for sprite in grid[tractor.get_index_x() + 1][tractor.get_index_y()]):
+            try:
+                steps.remove("D")
+            except:
+                pass
+        if tractor.get_index_y() - 1 < 0 or any(isinstance(sprite, Tree) for sprite in grid[tractor.get_index_x()][tractor.get_index_y() - 1]):
+            try:
+                steps.remove("L")
+            except:
+                pass
+        if tractor.get_index_y() + 1 >= self.map_manager.current_map_size or any(isinstance(sprite, Tree) for sprite in grid[tractor.get_index_x()][tractor.get_index_y() + 1]):
+            try:
+                steps.remove("R")
+            except:
+                pass
+
+        return sorted(list(steps), key = lambda x: (not x.isupper(), x))
+
+    def modify_grid(self, grid, step, tractor):
+        if step == "L":
+            grid[tractor.get_index_x()][tractor.get_index_y()].remove(tractor)
+            tractor.set_index_y(tractor.get_index_y() - 1)
+            grid[tractor.get_index_x()][tractor.get_index_y()].append(tractor)
+            pass
+        elif step == "R":
+            grid[tractor.get_index_x()][tractor.get_index_y()].remove(tractor)
+            tractor.set_index_y(tractor.get_index_y() + 1)
+            grid[tractor.get_index_x()][tractor.get_index_y()].append(tractor)
+            pass
+        elif step == "U":
+            grid[tractor.get_index_x()][tractor.get_index_y()].remove(tractor)
+            tractor.set_index_x(tractor.get_index_x() - 1)
+            grid[tractor.get_index_x()][tractor.get_index_y()].append(tractor)
+            pass
+        elif step == "D":
+            grid[tractor.get_index_x()][tractor.get_index_y()].remove(tractor)
+            tractor.set_index_x(tractor.get_index_x() + 1)
+            grid[tractor.get_index_x()][tractor.get_index_y()].append(tractor)
+            pass
+        elif step == "i":
+            pass
+        elif step == "f":
+            pass
+        elif step == "h":
+            pass
+        elif step == "e":
+            pass
+        return grid
