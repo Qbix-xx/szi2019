@@ -370,12 +370,8 @@ class Engine:
         if self.tractor_collision_detection():
             self.__tractor.set_rect(offset)
 
-    def update_sprites(self, sim = False):
-        if sim:
-            divider = 2
-        else:
-            divider = 2000
-        if (pygame.time.get_ticks() - self.__start_time) / divider > 1:
+    def update_sprites(self):
+        if (pygame.time.get_ticks() - self.__start_time) / 2000 > 1:
             self.__start_time = pygame.time.get_ticks()
 
             for plant in self.__plants_sprite_group:
