@@ -383,20 +383,20 @@ class Engine:
     # TODO: change name of this method
     def do_things(self, map, tractor):
         field = map[tractor.get_index_x()][tractor.get_index_y()]
-        index = len(field) - 1
 
-        if isinstance(field[index], AbstractHarvestablePlants):
+        for object in field:
+            if isinstance(object, AbstractHarvestablePlants):
 
-            for stat in tractor.get_stats().keys():
+                for stat in tractor.get_stats().keys():
 
-                if tractor.if_operation_possible(stat):
-                    tractor_stat_rate = tractor.get_stat_rate(stat)
+                    if tractor.if_operation_possible(stat):
+                        tractor_stat_rate = tractor.get_stat_rate(stat)
 
-                    if field[index].if_operation_possible(stat, tractor_stat_rate):
-                        field[index].take_care(stat, tractor_stat_rate)
-                        field[index].update()
+                        if object.if_operation_possible(stat, tractor_stat_rate):
+                            object.take_care(stat, tractor_stat_rate)
+                            object.update()
 
-                        tractor.operation(stat, tractor_stat_rate)
+                            tractor.operation(stat, tractor_stat_rate)
 
     def tractor_collision_detection(self):
         flag = False
@@ -408,7 +408,7 @@ class Engine:
         return flag
 
     def refill_tractor(self, tractor):
-        if self.refill_collision_detection(ractor) == "BARN":
+        if self.refill_collision_detection(tractor) == "BARN":
             refill_type = "fertilizer"
         elif self.refill_collision_detection(tractor) == "WATER":
             refill_type = "irrigation"
@@ -420,14 +420,14 @@ class Engine:
 
     def harvest_plants(self, map, tractor):
         field = map[tractor.get_index_x()][tractor.get_index_y()]
-        index = len(field) - 1
 
-        if isinstance(field[index], AbstractHarvestablePlants):
+        for object in field:
+            if isinstance(object, AbstractHarvestablePlants):
 
-            if tractor.get_plants_held() < 3 and field[index].is_grown():
-                tractor.harvest()
-                field[index].kill()
-                del field[index]
+                if tractor.get_plants_held() < 3 and object.is_grown():
+                    tractor.harvest()
+                    object.kill()
+                    del object
 
     def deliver_plants(self, tractor):
         self.__plant_score += tractor.get_plants_held()
@@ -457,8 +457,7 @@ class Engine:
     def dfs_find(self, grid, current_steps, tractor):
         if self.__plant_score == self.__plant_score_goal:
             self.__dfs_solutions.append(current_steps)
-
-        if len(self.__dfs_solutions) >= 10:
+        elif len(self.__dfs_solutions) >= 1:
             return
         else:
             if len(self.__dfs_current_steps) == 0:
@@ -488,22 +487,22 @@ class Engine:
 
         # todo check collisions
 
-        if tractor.get_index_x() - 1 < 0 or any(isinstance(sprite, Tree) for sprite in grid[tractor.get_index_x() - 1][tractor.get_index_y()]):
+        if tractor.get_index_y() - 1 < 0 or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in grid[tractor.get_index_x()][tractor.get_index_y() - 1]):
             try:
                 steps.remove("U")
             except:
                 pass
-        if tractor.get_index_x() + 1 >= self.map_manager.current_map_size or any(isinstance(sprite, Tree) for sprite in grid[tractor.get_index_x() + 1][tractor.get_index_y()]):
+        if tractor.get_index_y() + 1 >= self.map_manager.current_map_size or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in grid[tractor.get_index_x()][tractor.get_index_y() + 1]):
             try:
                 steps.remove("D")
             except:
                 pass
-        if tractor.get_index_y() - 1 < 0 or any(isinstance(sprite, Tree) for sprite in grid[tractor.get_index_x()][tractor.get_index_y() - 1]):
+        if tractor.get_index_x() - 1 < 0 or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in grid[tractor.get_index_x() - 1][tractor.get_index_y()]):
             try:
                 steps.remove("L")
             except:
                 pass
-        if tractor.get_index_y() + 1 >= self.map_manager.current_map_size or any(isinstance(sprite, Tree) for sprite in grid[tractor.get_index_x()][tractor.get_index_y() + 1]):
+        if tractor.get_index_x() + 1 >= self.map_manager.current_map_size or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in grid[tractor.get_index_x() + 1][tractor.get_index_y()]):
             try:
                 steps.remove("R")
             except:
@@ -513,26 +512,124 @@ class Engine:
             try:
                 steps.remove("i")
                 steps.remove("f")
+                steps.remove("h")
+            except:
+                pass
+        else:
+            field = grid[tractor.get_index_x()][tractor.get_index_y()]
+            index = 1
+
+            if isinstance(field[index], AbstractHarvestablePlants):
+                stage = field[index].get_grow_stage()
+                if stage == 0:
+                    try:
+                        steps.remove("f")
+                        steps.remove("h")
+                    except:
+                        pass
+                elif stage == 1:
+                    try:
+                        steps.remove("i")
+                        steps.remove("h")
+                    except:
+                        pass
+                elif stage == 2:
+                    try:
+                        steps.remove("i")
+                        steps.remove("f")
+                        steps.remove("h")
+                    except:
+                        pass
+                elif stage == 3:
+                    try:
+                        steps.remove("i")
+                        steps.remove("f")
+                    except:
+                        pass
+
+                if not field[index].has_warning_on("irrigation"):
+                    try:
+                        steps.remove("i")
+                    except:
+                        pass
+
+                if not field[index].has_warning_on("fertilizer"):
+                    try:
+                        steps.remove("f")
+                    except:
+                        pass
+
+        if tractor.get_plants_held() == 3:
+            try:
+                steps.remove("h")
+            except:
+                pass
+        elif tractor.get_plants_held() == 0:
+            try:
+                steps.remove("e")
             except:
                 pass
 
-        if self.refill_collision_detection(tractor) != "WATER":
+        if not tractor.if_operation_possible("irrigation"):
             try:
                 steps.remove("i")
             except:
                 pass
 
-        if self.refill_collision_detection(tractor) != "BARN":
+        if not tractor.if_operation_possible("fertilizer"):
             try:
-                steps.remove("e")
                 steps.remove("f")
             except:
                 pass
 
 
-        return sorted(list(steps), key = lambda x: (not x.isupper(), x))
+        if self.refill_collision_detection(tractor) != "WATER":
+            try:
+                steps.remove("w")
+            except:
+                pass
+        else:
+            if not tractor.if_refill_possible("irrigation"):
+                try:
+                    steps.remove("w")
+                except:
+                    pass
+
+        if self.refill_collision_detection(tractor) != "BARN":
+            try:
+                steps.remove("e")
+            except:
+                pass
+            try:
+                steps.remove("b")
+            except:
+                pass
+        else:
+            if not tractor.if_refill_possible("fertilizer"):
+                try:
+                    steps.remove("b")
+                except:
+                    pass
+
+        if not steps:
+            print("T posX: " + str(tractor.get_index_x()) + " posY: " + str(tractor.get_index_y()) + "\tPusta lista")
+
+            if last_step == "L":
+                steps.add("R")
+            elif last_step == "R":
+                steps.add("L")
+            elif last_step == "U":
+                steps.add("D")
+            elif last_step == "D":
+                steps.add("U")
+
+        new_steps = sorted(list(steps), key = lambda x: (not x.islower(), x))
+        print("T posX: " + str(tractor.get_index_x()) + " posY: " + str(tractor.get_index_y()), end="\t")
+        print(new_steps)
+        return new_steps
 
     def modify_grid(self, grid, step, tractor):
+        print("Movement: " + step)
         if step == "L":
             grid[tractor.get_index_x()][tractor.get_index_y()].remove(tractor)
             tractor.move_left()
@@ -561,4 +658,21 @@ class Engine:
             self.harvest_plants(grid, tractor)
         elif step == "e":
             self.deliver_plants(tractor)
+        elif step == "w":
+            self.refill_tractor(tractor)
+        elif step == "b":
+            self.refill_tractor(tractor)
+
+        self.sim_update_sprites(grid)
         return grid
+
+    def sim_update_sprites(self, grid):
+        if (pygame.time.get_ticks() - self.__start_time) / 2 > 1:
+            self.__start_time = pygame.time.get_ticks()
+
+            for fields in grid:
+                for field in fields:
+                    for object in field:
+                        if isinstance(object, AbstractHarvestablePlants):
+                            object.grow()
+                            object.handle_warnings(True)

@@ -63,7 +63,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
     def update(self, *args):
         self.__update_stage_image()
-        self.__handle_warnings()
+        self.handle_warnings()
 
     def check_progress(self):
         if self.__grow_stage == 0:
@@ -95,7 +95,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
         if self.__grow_stage == 2:
             self.__last_stage_growth += 10
-            if self.__last_stage_growth >= 100:
+            if self.__last_stage_growth >= 10:
                 self.__last_stage_growth = 100
 
         ##dev_end
@@ -122,10 +122,11 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
         self.image = self.__current_clean_image
 
-    def __handle_warnings(self):
+    def handle_warnings(self, sim = False):
         if self.__grow_stage == 0 or self.__grow_stage == 1:
             self.__check_all_stat_level()
-            self.__draw_warning()
+            if not sim:
+                self.__draw_warning()
 
     def __check_all_stat_level(self):
         for stat in self.get_stats():
@@ -165,3 +166,6 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
                            self.get_stats()[stat]["done"] == False else False
         else:
             return False
+
+    def has_warning_on(self, stat):
+            return self.get_stats().get(stat)["warning"]

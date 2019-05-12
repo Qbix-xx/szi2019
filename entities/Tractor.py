@@ -151,3 +151,6 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
     def deliver(self):
         self.__plants_held = 0
+
+    def get_name(self):
+        return "Tractor"
