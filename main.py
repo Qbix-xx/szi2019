@@ -28,7 +28,6 @@ while True:
     # handle keyboard input
     engine.handle_keyboard()
 
-    engine.handle_dfs()
     # update sprites
     engine.update_sprites()
 
