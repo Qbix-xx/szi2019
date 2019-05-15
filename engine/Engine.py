@@ -361,8 +361,10 @@ class Engine:
                 elif event.key == K_m:
                     if self.__mode == "manual":
                         self.__mode = "auto"
+                        self.handle_dfs()
                     else:
                         self.__mode = "manual"
+
                 # global collision detection
                 self.__check_tractor_collisions(offset)
 
@@ -457,7 +459,7 @@ class Engine:
     def dfs_find(self, grid, current_steps, tractor):
         if self.__plant_score == self.__plant_score_goal:
             self.__dfs_solutions.append(current_steps)
-        elif len(self.__dfs_solutions) >= 1:
+        if len(self.__dfs_solutions) >= 1:
             return
         else:
             if len(self.__dfs_current_steps) == 0:
@@ -467,7 +469,6 @@ class Engine:
             for step in self.possible_steps(grid, s, tractor):
                 new_current_steps = current_steps
                 new_current_steps.append(step)
-
                 new_grid = self.modify_grid(grid.copy(), step, tractor)
                 self.dfs_find(new_grid, new_current_steps, tractor)
 
