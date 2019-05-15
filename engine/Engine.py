@@ -1,6 +1,6 @@
-import sys
-import os
 import copy
+import sys
+
 import pygame
 from pygame.locals import *
 
@@ -12,22 +12,12 @@ from entities.Ground.Road import Road
 from entities.Ground.Tree import Tree
 from entities.Tractor import Tractor
 from entities.WaterContainer import WaterContainer
-
 from .MapManager import *
+
 
 class Engine:
     def __init__(self, map_layout):
-        self.__all_inits_with_map_layout(map_layout)
-
-    def __all_inits_with_map_layout(self, map_layout):
-        self.map_manager = MapManager(
-        os.path.join("resources", "map_layouts"),
-            map_layout)
-        try:
-            self.map_manager.load_map("default")
-        except:
-            print("Couldn't load map: " + self.map_manager.get_current_map_name())
-
+        self.__init_map_manager(map_layout)
         self.__MAP_SIZE = self.map_manager.get_current_map_size()
 
         self.__barns = []
@@ -49,6 +39,16 @@ class Engine:
 
         self.__start_time = pygame.time.get_ticks()
 
+    def __init_map_manager(self, map_layout):
+        self.map_manager = MapManager(
+            os.path.join("resources", "map_layouts"),
+            map_layout)
+        try:
+            self.map_manager.load_map("default")
+
+        except:
+            print("Couldn't load map: " + self.map_manager.get_current_map_name())
+
     def __init_sprites(self):
         self.__init_sprites_group()
         self.__init_tractor()
@@ -64,7 +64,7 @@ class Engine:
         self.__tractor_sprite_group.add(self.__tractor)
 
     def __init_map(self):
-       #self.__load_map_from_file(path_to_map_layout)
+        # self.__load_map_from_file(path_to_map_layout)
         self.__load_map_from_map_manager()
         # create game map from layout
         self.__game_map_init()
@@ -114,9 +114,9 @@ class Engine:
             "tractor": tractor_fonts_colours
         }
 
-    #def __load_map_from_file(self, path):
-     #   with open(path) as textfile:
-      #      self.__mapLayoutFile = list(line.replace('\n', '').split(" ") for line in textfile)
+    # def __load_map_from_file(self, path):
+    #   with open(path) as textfile:
+    #      self.__mapLayoutFile = list(line.replace('\n', '').split(" ") for line in textfile)
 
     def __load_map_from_map_manager(self):
         self.__mapLayoutFile = self.map_manager.get_current_map_layout()
@@ -216,14 +216,13 @@ class Engine:
         )
 
         if isinstance(local_field_list[len(local_field_list) - 1], AbstractHarvestablePlants):
-
             temp_stats = local_field_list[len(local_field_list) - 1].get_stats()
             plant_stage = local_field_list[len(local_field_list) - 1].get_grow_stage()
 
             dict_to_display = {
                 "Watered": temp_stats["irrigation"]["done"],
                 "Fertilized": temp_stats["fertilizer"]["done"],
-                "Growth stage": plant_stage+1,
+                "Growth stage": plant_stage + 1,
                 "irrigation": temp_stats["irrigation"]["level"],
                 "fertilizer": temp_stats["fertilizer"]["level"]
             }
@@ -356,7 +355,8 @@ class Engine:
                     if self.__selected_map_idx >= len(self.map_manager.get_map_list()):
                         self.__selected_map_idx = 0
                 elif event.key == K_RETURN:
-                    self.__all_inits_with_map_layout(self.map_manager.get_map_layout_name_with_idx(self.__selected_map_idx))
+                    self.__all_inits_with_map_layout(
+                        self.map_manager.get_map_layout_name_with_idx(self.__selected_map_idx))
 
                 elif event.key == K_m:
                     if self.__mode == "manual":
@@ -487,22 +487,28 @@ class Engine:
 
         # todo check collisions
 
-        if tractor.get_index_y() - 1 < 0 or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in grid[tractor.get_index_x()][tractor.get_index_y() - 1]):
+        if tractor.get_index_y() - 1 < 0 or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in
+                                                grid[tractor.get_index_x()][tractor.get_index_y() - 1]):
             try:
                 steps.remove("U")
             except:
                 pass
-        if tractor.get_index_y() + 1 >= self.map_manager.current_map_size or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in grid[tractor.get_index_x()][tractor.get_index_y() + 1]):
+        if tractor.get_index_y() + 1 >= self.map_manager.current_map_size or any(
+                isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in
+                grid[tractor.get_index_x()][tractor.get_index_y() + 1]):
             try:
                 steps.remove("D")
             except:
                 pass
-        if tractor.get_index_x() - 1 < 0 or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in grid[tractor.get_index_x() - 1][tractor.get_index_y()]):
+        if tractor.get_index_x() - 1 < 0 or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in
+                                                grid[tractor.get_index_x() - 1][tractor.get_index_y()]):
             try:
                 steps.remove("L")
             except:
                 pass
-        if tractor.get_index_x() + 1 >= self.map_manager.current_map_size or any(isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in grid[tractor.get_index_x() + 1][tractor.get_index_y()]):
+        if tractor.get_index_x() + 1 >= self.map_manager.current_map_size or any(
+                isinstance(sprite, (Tree, Barn, WaterContainer)) for sprite in
+                grid[tractor.get_index_x() + 1][tractor.get_index_y()]):
             try:
                 steps.remove("R")
             except:
@@ -582,7 +588,6 @@ class Engine:
             except:
                 pass
 
-
         if self.refill_collision_detection(tractor) != "WATER":
             try:
                 steps.remove("w")
@@ -623,7 +628,7 @@ class Engine:
             elif last_step == "D":
                 steps.add("U")
 
-        new_steps = sorted(list(steps), key = lambda x: (not x.islower(), x))
+        new_steps = sorted(list(steps), key=lambda x: (not x.islower(), x))
         print("T posX: " + str(tractor.get_index_x()) + " posY: " + str(tractor.get_index_y()), end="\t")
         print(new_steps)
         return new_steps
