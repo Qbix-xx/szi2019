@@ -1,3 +1,8 @@
+# import threading
+# import dummy_threading as threading
+import _thread as threading
+import time
+
 import pygame
 
 from engine.Engine import Engine
@@ -8,9 +13,11 @@ pygame.font.init()
 # TODO create config
 # -------editables-------
 FPS = 30
-MAP_SIZE = 15      # in tiles
-WINDOW_SIZE = (MAP_SIZE * 33 + 450 , MAP_SIZE * 33 + 300)
-PATH_TO_MAP = "resources/map_layouts/layout2.txt"
+# PATH_TO_MAP = "resources/map_layouts/dfs_test.txt"
+# PATH_TO_MAP = "resources/map_layouts/layout2.txt"
+DEFAULT_MAP = "dfs_test.txt"
+DEFAULT_MAP_SIZE = 15      # in tiles
+WINDOW_SIZE = (DEFAULT_MAP_SIZE * 33 + 450 , DEFAULT_MAP_SIZE * 33 + 300)
 # -----------------------
 
 # screen handle
@@ -21,14 +28,24 @@ pygame.display.set_caption('Czerwony ciągnik')
 fpsClock = pygame.time.Clock()
 
 # create and init game engine
-engine = Engine(MAP_SIZE, PATH_TO_MAP)
+engine = Engine(DEFAULT_MAP)
+
+
+def timer(a, b):
+    while True:
+        if engine.get_pause_flag():
+            time.sleep(2)
+            engine.set_pause_flag(False)
+
+
+timer_thread = threading.start_new_thread(timer, (0, 0))
 
 while True:
-    # handle keyboard input
+    # # handle keyboard input
     engine.handle_keyboard()
 
     # update sprites
-    engine.update_sprites()
+    engine.update()
 
     # render game
     engine.render(hScreen)

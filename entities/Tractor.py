@@ -45,6 +45,9 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
             "front": sheet.subsurface(pygame.Rect(3 * 32, 0, 32, 32))
         }
 
+    def get_step(self):
+        return self.__step
+
     def get_rect(self):
         return self.rect
 
@@ -72,6 +75,12 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
     def get_index_y(self):
         return self.__index_y
 
+    def set_index_x(self, newX):
+        self.__index_x = newX
+
+    def set_index_y(self, newY):
+        self.__index_y = newY
+
     def set_rect_by_index(self, rect):
         self.rect.x = rect[0] * 33 + 33
         self.rect.y = rect[1] * 33 + 33
@@ -80,30 +89,33 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         self.rect = rect
 
     def move_right(self):
-        self.update_position(self.__step, 0)
         self.image = self.__spritesheet["right"]
+        return self.update_position(self.__step, 0)
 
     def move_left(self):
-        self.update_position(-self.__step, 0)
         self.image = self.__spritesheet["left"]
+        return self.update_position(-self.__step, 0)
 
     def move_down(self):
-        self.update_position(0, self.__step)
         self.image = self.__spritesheet["front"]
+        return self.update_position(0, self.__step)
 
     def move_up(self):
-        self.update_position(0, -self.__step)
         self.image = self.__spritesheet["back"]
+        return self.update_position(0, -self.__step)
 
     def update_position(self, step_x, step_y):
-        if self.__check_if_update_position_possible(step_x, step_y):
+        if self.check_if_update_position_possible(step_x, step_y):
             self.rect.x += step_x
             self.__index_x = int((self.rect.x - 32) / 32)
 
             self.rect.y += step_y
             self.__index_y = int((self.rect.y - 32) / 32)
+            return True
+        else:
+            return False
 
-    def __check_if_update_position_possible(self, step_x, step_y):
+    def check_if_update_position_possible(self, step_x, step_y):
         return True if (self.rect.x + step_x >= 32) \
                        and (self.rect.x + step_x <= 33 * self.__map_size) \
                        and (self.rect.y + step_y >= 32) \
@@ -141,7 +153,10 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         return self.__plants_held
 
     def harvest(self):
-            self.__plants_held += 1
+        self.__plants_held += 1
 
     def deliver(self):
         self.__plants_held = 0
+
+    def get_name(self):
+        return "Tractor"
