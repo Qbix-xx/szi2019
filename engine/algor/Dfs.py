@@ -88,174 +88,70 @@ class Dfs:
                 self.dfs_find(plant_score, temp_current_steps)
 
     def possible_steps(self, last_step):
-        steps = {"L", "R", "U", "D", "i", "f", "h", "e", "b", "w"}
+        steps = []
         grid = self.__map
 
-        if last_step in {"i", "f", "h", "e", "b", "w"}:
-            steps.remove(last_step)
+        if self.__tractor.move_up():
+            if not self.__engine.collision_detection(self.__tractor):
+                steps.append("U")
+            self.__tractor.move_down()
+
+        if self.__tractor.move_down():
+            if not self.__engine.collision_detection(self.__tractor):
+                steps.append("D")
+            self.__tractor.move_up()
+
+        if self.__tractor.move_left():
+            if not self.__engine.collision_detection(self.__tractor):
+                steps.append("L")
+            self.__tractor.move_right()
+
+        if self.__tractor.move_right():
+            if not self.__engine.collision_detection(self.__tractor):
+                steps.append("R")
+            self.__tractor.move_left()
 
         if last_step is None:
             pass
         else:
-            if last_step == "L":
+            if last_step == "L" and "R" in steps:
                 steps.remove("R")
 
-            elif last_step == "R":
+            elif last_step == "R" and "L" in steps:
                 steps.remove("L")
 
-            elif last_step == "U":
+            elif last_step == "U" and "D" in steps:
                 steps.remove("D")
 
-            elif last_step == "D":
+            elif last_step == "D" and "U" in steps:
                 steps.remove("U")
 
-        if self.__tractor.move_up():
-            if self.__engine.collision_detection(self.__tractor):
-                steps.remove("U")
-            self.__tractor.move_down()
-        else:
-            try:
-                steps.remove("U")
-            except:
-                pass
-
-        if self.__tractor.move_down():
-            if self.__engine.collision_detection(self.__tractor):
-                try:
-                    steps.remove("D")
-                except:
-                    pass
-            self.__tractor.move_up()
-        else:
-            try:
-                steps.remove("D")
-            except:
-                pass
-
-        if self.__tractor.move_left():
-            if self.__engine.collision_detection(self.__tractor):
-                try:
-                    steps.remove("L")
-                except:
-                    pass
-            self.__tractor.move_right()
-        else:
-            try:
-                steps.remove("L")
-            except:
-                pass
-
-        if self.__tractor.move_right():
-            if self.__engine.collision_detection(self.__tractor):
-                try:
-                    steps.remove("R")
-                except:
-                    pass
-            self.__tractor.move_left()
-        else:
-            try:
-                steps.remove("R")
-            except:
-                pass
-
-        if not any(isinstance(sprite, Plant) for sprite in
-                   grid[self.__tractor.get_index_x()][self.__tractor.get_index_y()]):
-            try:
-                steps.remove("i")
-                steps.remove("f")
-                steps.remove("h")
-            except:
-                pass
-        else:
+        if any(isinstance(sprite, Plant) for sprite in
+               grid[self.__tractor.get_index_x()][self.__tractor.get_index_y()]):
             field = grid[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
-            index = 1
-
+            index = 1  # because Plant is always at this index in field list (grass at 0)
             if isinstance(field[index], AbstractHarvestablePlants):
                 stage = field[index].get_grow_stage()
-                if stage == 0:
-                    try:
-                        steps.remove("f")
-                        steps.remove("h")
-                    except:
-                        pass
-                elif stage == 1:
-                    try:
-                        steps.remove("i")
-                        steps.remove("h")
-                    except:
-                        pass
+                if stage == 0 and field[index].has_warning_on("irrigation") and\
+                        self.__tractor.if_operation_possible("irrigation"):
+                    steps.append("i")
+                elif stage == 1 and field[index].has_warning_on("fertilizer") and\
+                        self.__tractor.if_operation_possible("fertilizer"):
+                    steps.append("f")
                 elif stage == 2:
-                    try:
-                        steps.remove("i")
-                        steps.remove("f")
-                        steps.remove("h")
-                    except:
-                        pass
-                elif stage == 3:
-                    try:
-                        steps.remove("i")
-                        steps.remove("f")
-                    except:
-                        pass
-
-                if not field[index].has_warning_on("irrigation"):
-                    try:
-                        steps.remove("i")
-                    except:
-                        pass
-
-                if not field[index].has_warning_on("fertilizer"):
-                    try:
-                        steps.remove("f")
-                    except:
-                        pass
-
-        if self.__tractor.get_plants_held() != self.__plant_score_goal:
-            try:
-                steps.remove("e")
-            except:
-                pass
-
-        if not self.__tractor.if_operation_possible("irrigation"):
-            try:
-                steps.remove("i")
-            except:
-                pass
-
-        if not self.__tractor.if_operation_possible("fertilizer"):
-            try:
-                steps.remove("f")
-            except:
-                pass
-
-        if self.__engine.refill_collision_detection(self.__tractor) != "WATER_CONTAINER":
-            try:
-                steps.remove("w")
-            except:
-                pass
-        else:
-            if not self.__tractor.if_refill_possible("irrigation"):
-                try:
-                    steps.remove("w")
-                    # todo optimize
-                except:
                     pass
+                elif stage == 3 and self.__tractor.get_plants_held() < 3:
+                    steps.append("h")
 
-        if self.__engine.refill_collision_detection(self.__tractor) != "BARN":
-            try:
-                steps.remove("e")
-            except:
-                pass
-            try:
-                steps.remove("b")
-            except:
-                pass
-        else:
-            if not self.__tractor.if_refill_possible("fertilizer"):
-                try:
-                    steps.remove("b")
-                except:
-                    pass
+        if self.__engine.refill_collision_detection(self.__tractor) == "WATER_CONTAINER" and\
+                self.__tractor.if_refill_possible("irrigation"):
+                steps.append("w")
+
+        if self.__engine.refill_collision_detection(self.__tractor) == "BARN":
+                if self.__tractor.if_refill_possible("fertilizer"):
+                    steps.append("b")
+                if self.__tractor.get_plants_held() > 0:
+                    steps.append("e")
 
         if not steps:
             print(
@@ -263,13 +159,13 @@ class Dfs:
                     self.__tractor.get_index_y()) + "\tPusta lista")
 
             if last_step == "L":
-                steps.add("R")
+                steps.append("R")
             elif last_step == "R":
-                steps.add("L")
+                steps.append("L")
             elif last_step == "U":
-                steps.add("D")
+                steps.append("D")
             elif last_step == "D":
-                steps.add("U")
+                steps.append("U")
 
         new_steps = sorted(list(steps), key=lambda x: (not x.islower(), x))
         print("T posX: " + str(self.__tractor.get_index_x()) + " posY: " + str(self.__tractor.get_index_y()), end="\t")
