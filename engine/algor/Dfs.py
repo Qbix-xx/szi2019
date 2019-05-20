@@ -45,11 +45,11 @@ class Dfs:
         print(self.__dfs_solutions)
 
     def dfs_find(self, plant_score, current_steps):
-        if len(self.__dfs_solutions) == 2:  # todo change
+        if len(self.__dfs_solutions) == 1:  # todo change
             print("abandon in __dfs_solutions == 1")
             return
 
-        if plant_score == self.__plant_score_goal:
+        if plant_score >= self.__plant_score_goal:
             self.__dfs_solutions.append(current_steps)
             print("adding to solutions")
             return
@@ -67,14 +67,16 @@ class Dfs:
             for step in self.possible_steps(s):
                 temp_current_steps = current_steps
 
+                if len(self.__dfs_solutions) == 1:  # todo change
+                    return
+
                 if self.__plant_score == self.__plant_score_goal:
                     self.__dfs_solutions.append(current_steps)
                     print("adding to solutions")
-                    self.__plant_score = 0
+                    # self.__plant_score = 0
                     return
 
-                if len(self.__dfs_solutions) == 2:  # todo change
-                    return
+
 
                 if len(current_steps) > self.current_steps_limit:
                     print("abandon in possible_steps")
@@ -454,7 +456,7 @@ class Dfs:
             #         print(obj.get_rect())
 
             self.set_plant_score(
-                self.__engine.deliver_plants(self.__plant_score_goal, self.__tractor)
+                self.__engine.deliver_plants(self.__plant_score, self.__tractor)
             )
 
         if step == "w" or step == "b":
