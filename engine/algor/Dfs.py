@@ -45,7 +45,7 @@ class Dfs:
         print(self.__dfs_solutions)
 
     def dfs_find(self, plant_score, current_steps):
-        if len(self.__dfs_solutions) == 1:  # todo change
+        if len(self.__dfs_solutions) == 2:  # todo change
             print("abandon in __dfs_solutions == 1")
             return
 
@@ -65,27 +65,25 @@ class Dfs:
                 s = current_steps[-1]  # last element of the current steps list
 
             for step in self.possible_steps(s):
-                temp_current_steps = current_steps
 
-                if len(self.__dfs_solutions) == 1:  # todo change
+                if len(self.__dfs_solutions) == 2:  # todo change
                     return
+
+                self.update(step)
 
                 if self.__plant_score == self.__plant_score_goal:
                     self.__dfs_solutions.append(current_steps)
                     print("adding to solutions")
-                    # self.__plant_score = 0
+                    self.__plant_score = 0
                     return
-
-
+                else:
+                    current_steps.append(step)
 
                 if len(current_steps) > self.current_steps_limit:
                     print("abandon in possible_steps")
                     break
 
-                temp_current_steps.append(step)
-                self.update(step)
-
-                self.dfs_find(plant_score, temp_current_steps)
+                self.dfs_find(plant_score, current_steps)
 
     def possible_steps(self, last_step):
         steps = {"L", "R", "U", "D", "i", "f", "h", "e", "b", "w"}
@@ -481,6 +479,8 @@ class Dfs:
             if self.__engine.get_pause_flag():
                 time.sleep(2)
                 self.__engine.set_pause_flag(False)
+            else:
+                time.sleep(1.75)
 
     def set_plant_score(self, plant_score):
         self.__plant_score = plant_score

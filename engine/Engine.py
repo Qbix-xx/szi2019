@@ -461,15 +461,20 @@ class Engine:
     def refill_tractor(self, tractor):
         refill_type = None
 
-        if self.refill_collision_detection(tractor) == "BARN":
+        refill_collision = self.refill_collision_detection(tractor)
+
+        if refill_collision == "BARN":
             refill_type = "fertilizer"
-        elif self.refill_collision_detection(tractor) == "WATER":
+        elif refill_collision == "WATER_CONTAINER":
             refill_type = "irrigation"
 
-        for stat in tractor.get_stats().keys():
-            if stat == refill_type and tractor.if_refill_possible(stat):
-                tractor_stat_rate = tractor.get_stat_rate_refill(stat)
-                tractor.refill(stat, tractor_stat_rate)
+        if tractor.if_refill_possible(refill_type):
+            tractor.refill(refill_type, tractor.get_stat_rate_refill(refill_type))
+
+        # for stat in tractor.get_stats().keys():
+        #     if stat == refill_type and tractor.if_refill_possible(stat):
+        #         tractor_stat_rate = tractor.get_stat_rate_refill(stat)
+        #         tractor.refill(stat, tractor_stat_rate)
 
     def harvest_plants(self, map, tractor):
         field = map[tractor.get_index_x()][tractor.get_index_y()]
