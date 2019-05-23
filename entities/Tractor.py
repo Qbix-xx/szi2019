@@ -1,3 +1,4 @@
+import copy
 from abc import ABC
 
 import pygame
@@ -21,14 +22,15 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         self.rect = self.image.get_rect()
 
         self.__plants_held = 0
-        self.__inventory_size = 3
-        # starting position
-        # default is [1,1] in map matrix, upper left corner of map
+        # self.__inventory_size = 3
+
+        # starting position default is [1,1] - upper left corner of map
         self.set_rect_by_index((1, 1))
 
         # position in map matrix
         self.__index_x = int((self.rect.x - 32) / 32)
         self.__index_y = int((self.rect.y - 32) / 32)
+        # self.__index = (self.__index_x, self.__index_y)
 
         # 1 is needed because of additional lines between grid
         self.__step = 32 + 1
@@ -106,14 +108,33 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
     def update_position(self, step_x, step_y):
         if self.check_if_update_position_possible(step_x, step_y):
+            last_rect = copy.copy(self.rect)
+
             self.rect.x += step_x
-            self.__index_x = int((self.rect.x - 32) / 32)
+            if self.rect.x > last_rect.x:
+                self.__index_x += 1
+            elif self.rect.x < last_rect.x:
+                self.__index_x -= 1
 
             self.rect.y += step_y
-            self.__index_y = int((self.rect.y - 32) / 32)
+            if self.rect.y > last_rect.y:
+                self.__index_y += 1
+            elif self.rect.y < last_rect.y:
+                self.__index_y -= 1
+
             return True
         else:
             return False
+
+    def get_position(self):
+        return {"rect": self.rect,
+                "index_x": self.__index_x,
+                "index_y": self.__index_y}
+
+    def set_position(self, position):
+        self.rect = position["rect"]
+        self.__index_x = position["index_x"]
+        self.__index_y = position["index_y"]
 
     def check_if_update_position_possible(self, step_x, step_y):
         return True if (self.rect.x + step_x >= 32) \

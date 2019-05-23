@@ -25,7 +25,6 @@ class Engine:
         self.__init_map_manager(map_layout)
         self.__MAP_SIZE = self.map_manager.get_map_size()
 
-        # todo remove
         self.__barns = []
         self.__water_containers = []
 
@@ -43,35 +42,20 @@ class Engine:
         self.__plant_score = 0
         self.__plant_score_goal = len(self.__plants_sprite_group.sprites())
 
-        # self.__dfs = Dfs(self,
-        #                  self.__game_map,
-        #                  self.__tractor,
-        #                  self.__plant_score_goal,
-        #                  self.__solid_sprite_group,
-        #                  self.__barns,
-        #                  self.__watercontainers)
-
-        # self.__mode = "auto"
-        #
-        # self.__dfs_solutions = []
-        # self.__best_dfs_solution = []
-        # self.__dfs_current_steps = []
+        self.__plant_position_list = []
 
         self.__start_time = pygame.time.get_ticks()
 
     def __dfs(self):
-        gamemap = copy.copy(self.__game_map)
         dfs = Dfs(self,
-                  gamemap,
-                  copy.copy(self.__tractor),
                   copy.copy(self.__plant_score_goal),
-                  copy.copy(self.__solid_sprite_group),
-                  self.__MAP_SIZE)
+                  self.__MAP_SIZE,
+                  self.__plant_position_list)
 
         dfs.run()
 
     def __init_map_manager(self, map_layout):
-        # todo why
+        # todo why os path join
         self.map_manager = MapManager(
             os.path.join("resources", "map_layouts"),
             map_layout)
@@ -95,14 +79,13 @@ class Engine:
         self.__tractor = Tractor(self.__MAP_SIZE)
         self.__tractor_sprite_group.add(self.__tractor)
 
-    # todo move to mapmanager
     def init_map(self):
-        # self.__load_map_from_file(path_to_map_layout)
         self.__mapLayoutFile = self.map_manager.get_map_layout()
 
         # create game map from layout
         self.__game_map_init()
-
+        return self.__game_map
+        # return (self.__game_map, self)
 
     def __set_fonts_and_colours(self):
         self.__ground_text_header_font = pygame.font.SysFont('showcardgothic', 30)
@@ -131,7 +114,6 @@ class Engine:
         else:
             self.__right_column_pos = map_manager_map_size + 4
 
-        # TODO move it to dict
         ground_fonts_colours = {
             "name_font": pygame.font.SysFont('Helvetica', 30),
             "name_colour": (0, 0, 0),
@@ -150,10 +132,6 @@ class Engine:
             "ground": ground_fonts_colours,
             "tractor": tractor_fonts_colours
         }
-
-    # def __load_map_from_file(self, path):
-    #   with open(path) as textfile:
-    #      self.__mapLayoutFile = list(line.replace('\n', '').split(" ") for line in textfile)
 
     def __game_map_init(self):
         # list of lists (2d grid) containing all the objects on the map
@@ -180,6 +158,10 @@ class Engine:
                 elif self.__mapLayoutFile[i][j] == "2":
                     self.__tractor.set_rect_by_index((i, j))
                 elif self.__mapLayoutFile[i][j] == "3":
+                    # x = i * 32 + i + 32
+                    # y = j * 32 + j + 32
+                    # temp = Plant(x, y)
+                    # self.__plant_position_list.append((x, y))
                     temp = Plant(i * 32 + i + 32, j * 32 + j + 32)
                     self.__game_map[i][j].append(temp)
                     self.__plants_sprite_group.add(temp)
@@ -235,7 +217,7 @@ class Engine:
         self.__render_tractor_stats_interface(hScreen)
         self.__render_inventory_interface(hScreen)
         self.__render_map_list(hScreen)
-        self.__render_mode(hScreen)
+        # self.__render_mode(hScreen)
 
     def __render_ground_stats_interface(self, hScreen):
 
@@ -325,11 +307,11 @@ class Engine:
             self.__inventory_text_header_font,
             self.__inventory_text_header_colour,
             "Map list",
-            self.__right_column_pos, 5,
+            self.__right_column_pos, 10,
             hScreen
         )
 
-        yPos = 5
+        yPos = 10
         for map in maps:
             yPos = yPos + 1
             if map == self.map_manager.get_map_name():
@@ -347,14 +329,14 @@ class Engine:
             )
 
     # todo remove
-    def __render_mode(self, hScreen):
-        self.__render_text_header_surface(
-            self.__inventory_text_header_font,
-            self.__inventory_text_header_colour,
-            "Mode: " + self.__mode,
-            1, self.__MAP_SIZE + 6,
-            hScreen
-        )
+    # def __render_mode(self, hScreen):
+    #     self.__render_text_header_surface(
+    #         self.__inventory_text_header_font,
+    #         self.__inventory_text_header_colour,
+    #         "Mode: " + self.__mode,
+    #         1, self.__MAP_SIZE + 6,
+    #         hScreen
+    #     )
 
     def handle_keyboard(self):
         for event in pygame.event.get():
@@ -410,7 +392,7 @@ class Engine:
             self.__tractor.set_rect(offset)
 
     def update(self):
-        if (pygame.time.get_ticks() - self.__start_time) / 1000 > 2:
+        if (pygame.time.get_ticks() - self.__start_time) / 1000 > 1:
             self.__start_time = pygame.time.get_ticks()
 
             for plant in self.__plants_sprite_group:
@@ -421,6 +403,7 @@ class Engine:
 
     # TODO: change name
     def do_things(self, map, tractor):
+        # todo change iteration to [-1]
         field = map[tractor.get_index_x()][tractor.get_index_y()]
 
         for object in field:
@@ -447,7 +430,6 @@ class Engine:
 
         return flag
 
-    #
     # def sim_tractor_collision_detection(self, tractor):
     #     flag = False
     #
@@ -468,7 +450,7 @@ class Engine:
         elif refill_collision == "WATER_CONTAINER":
             refill_type = "irrigation"
 
-        if tractor.if_refill_possible(refill_type):
+        if refill_type is not None and tractor.if_refill_possible(refill_type):
             tractor.refill(refill_type, tractor.get_stat_rate_refill(refill_type))
 
         # for stat in tractor.get_stats().keys():
@@ -481,8 +463,10 @@ class Engine:
 
         for object in field:
             if isinstance(object, AbstractHarvestablePlants):
-                # todo change 3 to var
-                if tractor.get_plants_held() < 3 and object.is_grown():
+
+                # todo remove storage limit from project
+                if object.is_grown():
+                    # if tractor.get_plants_held() < 3 and object.is_grown():
                     tractor.harvest()
                     object.kill()
                     del object
@@ -492,7 +476,7 @@ class Engine:
         tractor.deliver()
         return plant_score
 
-        # todo to nie może by tak, trzeba ustawi jakiś limit
+        # todo should be possible only below specific level
 
     def refill_collision_detection(self, tractor):
         for sprite in self.__solid_sprite_group:
@@ -507,277 +491,3 @@ class Engine:
 
     def set_pause_flag(self, flag):
         self.__pause_flag = flag
-
-    # def handle_dfs(self):
-    #
-    #     map_copy = self.__game_map.copy()
-    #     tractor = copy.copy(self.__tractor)
-    #     map_copy[tractor.get_index_x()][tractor.get_index_y()].append(tractor)
-    #     self.dfs_find(map_copy, [], tractor)
-    #     # self.dfs_find(map_copy, self.__dfs_current_steps, tractor)
-    #     print(self.__dfs_solutions)
-    #
-    # def dfs_find(self, grid, current_steps, tractor):
-    #     if len(self.__dfs_solutions) == 1: #todo change
-    #         print("abandon in __dfs_solutions == 1")
-    #         return
-    #
-    #     if self.__plant_score == self.__plant_score_goal: #todo: change to sim var
-    #         self.__dfs_solutions.append(current_steps)
-    #         print("adding to solutions")
-    #         return
-    #
-    #     if len(current_steps) > 1000:
-    #         print("abandon in dfs_find")
-    #         return
-    #
-    #     else:
-    #         if len(current_steps) == 0:
-    #             s = None
-    #         else:
-    #             s = current_steps[-1] #last element of the current steps list
-    #
-    #         for step in self.possible_steps(grid, s, tractor, self.__plant_score_goal):
-    #             new_current_steps = current_steps
-    #
-    #             if len(self.__dfs_solutions) == 1:  # todo change
-    #                 return
-    #
-    #             # if len(current_steps) > 700:
-    #             #     print("abandon in possible_steps")
-    #             #     continue
-    #
-    #             new_current_steps.append(step)
-    #             new_grid = self.modify_grid(grid.copy(), step, tractor)
-    #
-    #             # if last_position == tractor.get_rect():
-    #             #     return
-    #
-    #             self.dfs_find(new_grid, new_current_steps, tractor)
-    #
-    # def possible_steps(self, grid, last_step, tractor, plant_score_goal):
-    #     steps = {"L", "R", "U", "D", "i", "f", "h", "e", "b", "w"}
-    #
-    #     if last_step in {"i", "f", "h", "e", "b", "w"}:
-    #         steps.remove(last_step)
-    #
-    #     if last_step is None:
-    #         pass
-    #     else:
-    #         if last_step == "L":
-    #             steps.remove("R")
-    #
-    #         elif last_step == "R":
-    #             steps.remove("L")
-    #
-    #         elif last_step == "U":
-    #             steps.remove("D")
-    #
-    #         elif last_step == "D":
-    #             steps.remove("U")
-    #
-    #     if tractor.move_up():
-    #         if self.sim_tractor_collision_detection(tractor):
-    #             try:
-    #                 steps.remove("U")
-    #             except:
-    #                 pass
-    #         tractor.move_down()
-    #     else:
-    #         try:
-    #             steps.remove("U")
-    #         except:
-    #             pass
-    #
-    #     if tractor.move_down():
-    #         if self.sim_tractor_collision_detection(tractor):
-    #             try:
-    #                 steps.remove("D")
-    #             except:
-    #                 pass
-    #         tractor.move_up()
-    #     else:
-    #         try:
-    #             steps.remove("D")
-    #         except:
-    #             pass
-    #
-    #     if tractor.move_left():
-    #         if self.sim_tractor_collision_detection(tractor):
-    #             try:
-    #                 steps.remove("L")
-    #             except:
-    #                 pass
-    #         tractor.move_right()
-    #     else:
-    #         try:
-    #             steps.remove("L")
-    #         except:
-    #             pass
-    #
-    #     if tractor.move_right():
-    #         if self.sim_tractor_collision_detection(tractor):
-    #             try:
-    #                 steps.remove("R")
-    #             except:
-    #                 pass
-    #         tractor.move_left()
-    #     else:
-    #         try:
-    #             steps.remove("R")
-    #         except:
-    #             pass
-    #
-    #     if not any(isinstance(sprite, Plant) for sprite in grid[tractor.get_index_x()][tractor.get_index_y()]):
-    #         try:
-    #             steps.remove("i")
-    #             steps.remove("f")
-    #             steps.remove("h")
-    #         except:
-    #             pass
-    #     else:
-    #         field = grid[tractor.get_index_x()][tractor.get_index_y()]
-    #         index = 1
-    #
-    #         if isinstance(field[index], AbstractHarvestablePlants):
-    #             stage = field[index].get_grow_stage()
-    #             if stage == 0:
-    #                 try:
-    #                     steps.remove("f")
-    #                     steps.remove("h")
-    #                 except:
-    #                     pass
-    #             elif stage == 1:
-    #                 try:
-    #                     steps.remove("i")
-    #                     steps.remove("h")
-    #                 except:
-    #                     pass
-    #             elif stage == 2:
-    #                 try:
-    #                     steps.remove("i")
-    #                     steps.remove("f")
-    #                     steps.remove("h")
-    #                 except:
-    #                     pass
-    #             elif stage == 3:
-    #                 try:
-    #                     steps.remove("i")
-    #                     steps.remove("f")
-    #                     # tractor.harvest()
-    #                 except:
-    #                     pass
-    #
-    #             if not field[index].has_warning_on("irrigation"):
-    #                 try:
-    #                     steps.remove("i")
-    #                 except:
-    #                     pass
-    #
-    #             if not field[index].has_warning_on("fertilizer"):
-    #                 try:
-    #                     steps.remove("f")
-    #                 except:
-    #                     pass
-    #
-    #     if tractor.get_plants_held() != plant_score_goal: # TODO change to var
-    #         try:
-    #             steps.remove("e")
-    #         except:
-    #             pass
-    #
-    #     if not tractor.if_operation_possible("irrigation"):
-    #         try:
-    #             steps.remove("i")
-    #         except:
-    #             pass
-    #
-    #     if not tractor.if_operation_possible("fertilizer"):
-    #         try:
-    #             steps.remove("f")
-    #         except:
-    #             pass
-    #
-    #     if self.refill_collision_detection(tractor) != "WATER":
-    #         try:
-    #             steps.remove("w")
-    #         except:
-    #             pass
-    #     else:
-    #         if not tractor.if_refill_possible("irrigation"):
-    #             try:
-    #                 steps.remove("w")
-    #             except:
-    #                 pass
-    #
-    #     if self.refill_collision_detection(tractor) != "BARN":
-    #         try:
-    #             steps.remove("e")
-    #         except:
-    #             pass
-    #         try:
-    #             steps.remove("b")
-    #         except:
-    #             pass
-    #     else:
-    #         if not tractor.if_refill_possible("fertilizer"):
-    #             try:
-    #                 steps.remove("b")
-    #             except:
-    #                 pass
-    #
-    #     if not steps:
-    #         print("T posX: " + str(tractor.get_index_x()) + " posY: " + str(tractor.get_index_y()) + "\tPusta lista")
-    #
-    #         if last_step == "L":
-    #             steps.add("R")
-    #         elif last_step == "R":
-    #             steps.add("L")
-    #         elif last_step == "U":
-    #             steps.add("D")
-    #         elif last_step == "D":
-    #             steps.add("U")
-    #
-    #     new_steps = sorted(list(steps), key=lambda x: (not x.islower(), x))
-    #     print("T posX: " + str(tractor.get_index_x()) + " posY: " + str(tractor.get_index_y()), end="\t")
-    #     print("New possible steps" + str(new_steps))
-    #     return new_steps
-    #
-    # def modify_grid(self, grid, step, tractor):
-    #     print("Movement: " + step)
-    #
-    #     if step == "L":
-    #         tractor.move_left()
-    #     elif step == "R":
-    #         tractor.move_right()
-    #     elif step == "U":
-    #         tractor.move_up()
-    #     elif step == "D":
-    #         tractor.move_down()
-    #
-    #     if step == "i":
-    #         self.do_things(grid, tractor)
-    #     if step == "f":
-    #         self.do_things(grid, tractor)
-    #     if step == "h":
-    #         self.harvest_plants(grid, tractor)
-    #     if step == "e":
-    #         self.deliver_plants(tractor)
-    #     if step == "w":
-    #         self.refill_tractor(tractor)
-    #     if step == "b":
-    #         self.refill_tractor(tractor)
-    #
-    #     self.sim_update_sprites(grid)
-    #     return grid
-    #
-    # def sim_update_sprites(self, grid):
-    #     if (pygame.time.get_ticks() - self.__start_time) / 2 > 1:
-    #         self.__start_time = pygame.time.get_ticks()
-    #
-    #         for fields in grid:
-    #             for field in fields:
-    #                 for object in field:
-    #                     if isinstance(object, AbstractHarvestablePlants):
-    #                         object.grow()
-    #                         object.handle_warnings(True)

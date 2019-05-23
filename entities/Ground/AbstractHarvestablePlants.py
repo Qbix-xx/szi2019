@@ -13,6 +13,8 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.__current_clean_image = None
         self.__grow_stage = 0
         self.__max_grow_stage = 3
+
+        # todo for this stats dict was created
         self.__last_stage_growth = 0  # goes from 100 to 0 on stage 2 before getting to the last stage
 
         self.__init_sprite_sheet(spritesheet)
@@ -64,14 +66,17 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
     def update(self, *args):
         self.__update_stage_image()
         self.handle_warnings()
+        self.check_progress()
 
     def check_progress(self):
         if self.__grow_stage == 0:
-            if self.get_stats()["irrigation"]["done"] is True and self.get_stats()["irrigation"]["level"] == 0:
+            if self.get_stats()["irrigation"]["done"] is True:
+                # and self.get_stats()["irrigation"]["level"] == 0:
                 self.__grow_stage += 1
                 self.get_stats()["irrigation"]["warning"] = False
         elif self.__grow_stage == 1:
-            if self.get_stats()["fertilizer"]["done"] is True and self.get_stats()["fertilizer"]["level"] == 0:
+            if self.get_stats()["fertilizer"]["done"] is True:
+                # and self.get_stats()["fertilizer"]["level"] == 0:
                 self.__grow_stage += 1
                 self.get_stats()["fertilizer"]["warning"] = False
         elif self.__grow_stage == 2:
@@ -87,30 +92,26 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
             if stat["level"] <= 0:
                 stat["level"] = 0
 
-        if self.__grow_stage == 1:
+        elif self.__grow_stage == 1:
             stat = self.get_stats()["fertilizer"]
             stat["level"] -= stat["rate"]
             if stat["level"] <= 0:
                 stat["level"] = 0
 
-        if self.__grow_stage == 2:
+        # todo refactor, move to dict
+        # todo make interface for this as well
+        elif self.__grow_stage == 2:
             self.__last_stage_growth += 10
             if self.__last_stage_growth >= 10:
                 self.__last_stage_growth = 100
 
-        ##dev_end
+        # todo "dev_end" check
         # for stat in self.get_stats().values():
         #     stat["level"] -= stat["rate"]
         #     if stat["level"] <= 0:
         #         stat["level"] = 0
         #
         self.check_progress()
-
-    def __grow_first_stage(self):
-        a = 1 #???
-
-    def __grow_second_stage(self):
-        a = 1 #???
 
     def is_grown(self):
         return True if self.__grow_stage == self.__max_grow_stage else False
@@ -122,11 +123,14 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
         self.image = self.__current_clean_image
 
+    # todo wtf sim
     def handle_warnings(self, sim = False):
         if self.__grow_stage == 0 or self.__grow_stage == 1:
             self.__check_all_stat_level()
-            if not sim:
-                self.__draw_warning()
+            self.__draw_warning()
+
+            # if not sim:
+            #     self.__draw_warning()
 
     def __check_all_stat_level(self):
         for stat in self.get_stats():
@@ -134,7 +138,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
     def __check_stat_level(self, stat):
         stat = self.get_stats()[stat]
-        if stat["level"] <= stat["warning_level"] and stat["done"] == False:
+        if stat["level"] <= stat["warning_level"] and stat["done"] is False:
             stat["warning"] = True
         else:
             stat["warning"] = False
@@ -146,12 +150,13 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
             if stat["warning"]:
                 self.__current_clean_image.blit(stat["warning_images"], (-20 * counter, 20))
 
-            counter += 1
+            # counter += 1
 
         self.image = self.__current_clean_image
 
     def take_care(self, stat, capacity):
-        self.get_stats().get(stat)["level"] += capacity
+        self.get_stats().get(stat)["level"] = 100
+        # self.get_stats().get(stat)["level"] += capacity
         self.get_stats().get(stat)["done"] = True
         self.__check_stat_level(stat)
 

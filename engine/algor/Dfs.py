@@ -5,53 +5,70 @@ import time
 import pygame
 
 from entities.Ground.AbstractHarvestablePlants import AbstractHarvestablePlants
-from entities.Ground.Plant import Plant
 from entities.Tractor import Tractor
 
 
 class Dfs:
-    def __init__(self, engine, game_map, tractor,
-                 plant_score_goal, solid_sprite_group,
-                 map_size):
+
+    def __init__(self, engine,
+                 plant_score_goal,
+                 map_size,
+                 plant_position_list):
         self.__mode = "auto"
 
-        self.counter = 0
+        self.__wait_flag = True
+        self.step_counter = 0
+        self.__path_counter = 0
         self.current_steps_limit = 100
 
         self.__dfs_solutions = []
         self.__best_dfs_solution = []
         self.__dfs_current_steps = []
 
-        self.__map = copy.copy(game_map)
-        # self.__tractor = copy.copy(tractor)
         self.__tractor = Tractor(map_size)
 
         self.__plant_score = 0
         self.__plant_score_goal = plant_score_goal
 
-        self.__solid_sprite_group = copy.copy(solid_sprite_group)
+        self.__plant_position_list = plant_position_list
 
         self.__start_time = pygame.time.get_ticks()
 
-        self.__timer_thread = threading.start_new_thread(self.timer, (0, 0))
-
         self.__engine = engine
+        # todo change
+        self.__map = self.__engine.init_map()
 
-        self.__engine.init_map()
+        self.__timer_thread = threading.start_new_thread(self.timer, (0, 0))
+        self.__plants_update_thread = threading.start_new_thread(self.__update_plants, (0, 0))
+
+        # new var
+        self.__paths_list = []
+
+    def reset_map(self):
+        self.__map = self.__engine.init_map()
 
     def run(self):
-        self.dfs_find(0, [])
+        while len(self.__dfs_solutions) < 2:
+            print("--------------PATH " + str(self.__path_counter))
+
+            self.dfs_find2()
+            # self.dfs_find(0, [])
+            self.reset_map()
+            self.step_counter = 0
+
+            time.sleep(0.5 + 0.1 * self.__path_counter)
+            self.__path_counter += 1
 
         print(self.__dfs_solutions)
 
     def dfs_find(self, plant_score, current_steps):
         if len(self.__dfs_solutions) == 2:  # todo change
             print("abandon in __dfs_solutions == 1")
-            return
+            return True
 
         if plant_score >= self.__plant_score_goal:
             self.__dfs_solutions.append(current_steps)
-            print("adding to solutions")
+            print("adding to solutions out")
             return
 
         if len(current_steps) > self.current_steps_limit:
@@ -64,30 +81,170 @@ class Dfs:
             else:
                 s = current_steps[-1]  # last element of the current steps list
 
-            for step in self.possible_steps(s):
+            for step in self.possible_steps2(s):
+                # for step in self.possible_steps(s):
+
+                # if steps' list is empty, ends path
+                if not step:
+                    return False
 
                 if len(self.__dfs_solutions) == 2:  # todo change
-                    return
+                    return True
 
+                tractor_last_position = copy.deepcopy(self.__tractor.get_position())
                 self.update(step)
 
+                # if step == "p":
+                #     if self.__wait_flag:
+                #     time.sleep(1)
+                #         self.__wait_flag = False
+                #     if current_steps[-1] == "p":
+                #         current_steps.remove("p")
+
+                current_steps.append(step)
+
                 if self.__plant_score == self.__plant_score_goal:
-                    self.__dfs_solutions.append(current_steps)
-                    print("adding to solutions")
+                    tmp_current_steps = copy.deepcopy(current_steps)
+                    self.__dfs_solutions.append(tmp_current_steps)
+                    print("adding to solutions in")
                     self.__plant_score = 0
-                    return
-                else:
-                    current_steps.append(step)
+                    break
+
+                # if step == "i" or step == "f":
+                #     time.sleep(1)
 
                 if len(current_steps) > self.current_steps_limit:
                     print("abandon in possible_steps")
                     break
 
-                self.dfs_find(plant_score, current_steps)
+                tmp_flag = self.dfs_find(plant_score, current_steps)
+                if tmp_flag is None:
+                    del current_steps[-1]
+                    # undo movement
+                    self.__tractor.set_position(tractor_last_position)
+
+    def dfs_find2(self):
+        self.__find_path(0, [])
+        # find best
+
+    def __find_path_next_step(self, last_step):
+        possible_steps = []
+
+        # check possible movement
+        if last_step == "D":
+            pass
+        else:
+            if self.__tractor.move_up():
+                if not self.__engine.collision_detection(self.__tractor):
+                    if not possible_steps.__contains__("U"):
+                        possible_steps.append("U")
+                self.__tractor.move_down()
+
+        if not last_step == "U":
+            pass
+        else:
+            if self.__tractor.move_down():
+                if not self.__engine.collision_detection(self.__tractor):
+                    if not possible_steps.__contains__("D"):
+                        possible_steps.append("D")
+                self.__tractor.move_up()
+
+        if not last_step == "R":
+            if self.__tractor.move_left():
+                if not self.__engine.collision_detection(self.__tractor):
+                    if not possible_steps.__contains__("L"):
+                        possible_steps.append("L")
+                self.__tractor.move_right()
+
+        if not last_step == "L":
+            if self.__tractor.move_right():
+                if not self.__engine.collision_detection(self.__tractor):
+                    if not possible_steps.__contains__("R"):
+                        possible_steps.append("R")
+                self.__tractor.move_left()
+
+        field = self.__map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+
+        if isinstance(field[-1], AbstractHarvestablePlants):
+            possible_steps.append("p")
+
+        possible_steps = sorted(list(possible_steps), key=lambda x: (not x.islower(), x))
+
+        print("Possible steps: " + str(possible_steps))
+
+        return possible_steps
+
+    def __find_path(self, plant_score, path):
+        if len(self.__paths_list) == 2:  # todo change
+            print("break max __find_path")
+            return True
+
+        if plant_score >= self.__plant_score_goal:
+            print("adding a new path")
+
+            # prevent from adding path which already exists
+            if not path in self.__paths_list:
+                self.__paths_list.append(path)
+            else:
+                print("abandon in adding the new path. path already exists")
+            return
+
+        # prevent from reach out limit of recursion
+        if len(path) > self.current_steps_limit:
+            print("abandon in __find_path")
+            return
+
+        if len(path) == 0:
+            s = None
+        else:
+            s = path[-1]  # last step
+
+        for step in self.__find_path_next_step(s):
+
+            # if steps' list is empty, ends path
+            if not step:
+                return False
+
+            # if len(self.__dfs_solutions) == 2:  # todo change
+            #     return True
+
+            tractor_last_position = copy.deepcopy(self.__tractor.get_position())
+            self.update(step)
+
+            # if step == "p":
+            #     if self.__wait_flag:
+            #     time.sleep(1)
+            #         self.__wait_flag = False
+            #     if current_steps[-1] == "p":
+            #         current_steps.remove("p")
+
+            path.append(step)
+
+            if self.__plant_score == self.__plant_score_goal:
+                tmp_current_steps = copy.deepcopy(path)
+                self.__dfs_solutions.append(tmp_current_steps)
+                print("adding to solutions in")
+                self.__plant_score = 0
+                break
+
+            # if step == "i" or step == "f":
+            #     time.sleep(1)
+
+            if len(path) > self.current_steps_limit:
+                print("abandon in possible_steps")
+                break
+
+            tmp_flag = self.__find_path(plant_score, path)
+            if tmp_flag is None:
+                del path[-1]
+                # undo movement
+                self.__tractor.set_position(tractor_last_position)
 
     def possible_steps(self, last_step):
         steps = {"L", "R", "U", "D", "i", "f", "h", "e", "b", "w"}
-        grid = self.__map
+        # steps = {"L", "R", "U", "D", "i", "f", "h", "e", "b", "w", "p"}
+
+        grid = copy.copy(self.__map)
 
         if last_step in {"i", "f", "h", "e", "b", "w"}:
             steps.remove(last_step)
@@ -109,7 +266,10 @@ class Dfs:
 
         if self.__tractor.move_up():
             if self.__engine.collision_detection(self.__tractor):
-                steps.remove("U")
+                try:
+                    steps.remove("U")
+                except:
+                    pass
             self.__tractor.move_down()
         else:
             try:
@@ -156,57 +316,77 @@ class Dfs:
             except:
                 pass
 
-        if not any(isinstance(sprite, Plant) for sprite in
-                   grid[self.__tractor.get_index_x()][self.__tractor.get_index_y()]):
+        field = grid[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+
+        if not any(isinstance(sprite, AbstractHarvestablePlants) for sprite in
+                   field):
             try:
                 steps.remove("i")
                 steps.remove("f")
                 steps.remove("h")
+                # steps.remove("p")
             except:
                 pass
         else:
-            field = grid[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
-            index = 1
+            # todo change field[1] to field[last elem]
+            # if isinstance(field[1], AbstractHarvestablePlants):
+            stage = field[1].get_grow_stage()
+            if stage == 0:
+                try:
+                    steps.remove("f")
+                    steps.remove("h")
+                except:
+                    pass
+            elif stage == 1:
+                try:
+                    steps.remove("i")
+                    steps.remove("h")
+                except:
+                    pass
+            elif stage == 2:
+                try:
+                    steps.remove("i")
+                    steps.remove("f")
+                    steps.remove("h")
+                except:
+                    pass
+            elif stage == 3:
+                try:
+                    steps.remove("i")
+                    steps.remove("f")
+                    # steps.remove("p")
+                except:
+                    pass
 
-            if isinstance(field[index], AbstractHarvestablePlants):
-                stage = field[index].get_grow_stage()
-                if stage == 0:
-                    try:
-                        steps.remove("f")
-                        steps.remove("h")
-                    except:
-                        pass
-                elif stage == 1:
+            if not field[1].has_warning_on("irrigation"):
+                try:
+                    steps.remove("i")
+                except:
+                    pass
+            else:
+                if not self.__tractor.if_operation_possible("irrigation"):
                     try:
                         steps.remove("i")
-                        steps.remove("h")
+                        # steps.remove("p")
                     except:
                         pass
-                elif stage == 2:
-                    try:
-                        steps.remove("i")
-                        steps.remove("f")
-                        steps.remove("h")
-                    except:
-                        pass
-                elif stage == 3:
-                    try:
-                        steps.remove("i")
-                        steps.remove("f")
-                    except:
-                        pass
+                # else:
+                #     steps.remove("p")
 
-                if not field[index].has_warning_on("irrigation"):
-                    try:
-                        steps.remove("i")
-                    except:
-                        pass
-
-                if not field[index].has_warning_on("fertilizer"):
+            if not field[1].has_warning_on("fertilizer"):
+                try:
+                    steps.remove("f")
+                except:
+                    pass
+            else:
+                if not self.__tractor.if_operation_possible("fertilizer"):
                     try:
                         steps.remove("f")
+                        # steps.remove("p")
                     except:
                         pass
+                # else:
+                #     steps.remove("p")
 
         if self.__tractor.get_plants_held() != self.__plant_score_goal:
             try:
@@ -214,18 +394,6 @@ class Dfs:
             except:
                 pass
 
-        if not self.__tractor.if_operation_possible("irrigation"):
-            try:
-                steps.remove("i")
-            except:
-                pass
-
-        if not self.__tractor.if_operation_possible("fertilizer"):
-            try:
-                steps.remove("f")
-            except:
-                pass
-
         if self.__engine.refill_collision_detection(self.__tractor) != "WATER_CONTAINER":
             try:
                 steps.remove("w")
@@ -235,7 +403,6 @@ class Dfs:
             if not self.__tractor.if_refill_possible("irrigation"):
                 try:
                     steps.remove("w")
-                    # todo optimize
                 except:
                     pass
 
@@ -255,203 +422,141 @@ class Dfs:
                 except:
                     pass
 
+        # todo perhaps to remove
         if not steps:
             print(
                 "T posX: " + str(self.__tractor.get_index_x()) + " posY: " + str(
-                    self.__tractor.get_index_y()) + "\tPusta lista")
+                    self.__tractor.get_index_y()) + "\tNone")
+            return []
 
-            if last_step == "L":
-                steps.add("R")
-            elif last_step == "R":
-                steps.add("L")
-            elif last_step == "U":
-                steps.add("D")
-            elif last_step == "D":
-                steps.add("U")
 
         new_steps = sorted(list(steps), key=lambda x: (not x.islower(), x))
         print("T posX: " + str(self.__tractor.get_index_x()) + " posY: " + str(self.__tractor.get_index_y()), end="\t")
-        print("New possible steps" + str(new_steps))
+        print("Possible steps: " + str(new_steps))
         return new_steps
 
-    def possible2(self, last_step):
-        # steps = {"L", "R", "U", "D", "i", "f", "h", "e", "b", "w"}
+    def possible_steps2(self, last_step):
         steps = []
 
-        # if last_step is None:
-        #     pass
-        # else:
-        #     if last_step == "L":
-        #         steps.remove("R")
+        # check possible movement
+        if not last_step == "D":
+            if self.__tractor.move_up():
+                if not self.__engine.collision_detection(self.__tractor):
+                    if not steps.__contains__("U"):
+                        steps.append("U")
+                self.__tractor.move_down()
+
+        if last_step == "U":
+            if self.__tractor.move_down():
+                if not self.__engine.collision_detection(self.__tractor):
+                    if not steps.__contains__("D"):
+                        steps.append("D")
+                self.__tractor.move_up()
+
+        if not last_step == "R":
+            if self.__tractor.move_left():
+                if not self.__engine.collision_detection(self.__tractor):
+                    if not steps.__contains__("L"):
+                        steps.append("L")
+                self.__tractor.move_right()
+
+        if not last_step == "L":
+            if self.__tractor.move_right():
+                if not self.__engine.collision_detection(self.__tractor):
+                    if not steps.__contains__("R"):
+                        steps.append("R")
+                self.__tractor.move_left()
+
+        field = self.__map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+
+        # possible actions for plants
+        if isinstance(field[-1], AbstractHarvestablePlants):
+            self.__check_possible_plants(steps)
+        #     plant = field[-1]
+        #     stage = field[1].get_grow_stage()
         #
-        #     elif last_step == "R":
-        #         steps.remove("L")
+        #     if stage == 0:
+        #         if plant.has_warning_on("irrigation") \
+        #                 and self.__tractor.if_operation_possible("irrigation"):
+        #             steps.append("i")
         #
-        #     elif last_step == "U":
-        #         steps.remove("D")
+        #     elif stage == 1:
+        #         if plant.has_warning_on("fertilizer") \
+        #                 and self.__tractor.if_operation_possible("fertilizer"):
+        #             steps.append("f")
         #
-        #     elif last_step == "D":
-        #         steps.remove("U")
+        #     elif stage == 3:
+        #         steps.append("h")
+        #
+        #     if not {"i", "f", "h"} in steps:
+        #         steps.append("p")
+        #
+        # if self.__tractor.get_plants_held() == self.__plant_score_goal:
+        #         steps.append("e")
 
-        if self.__tractor.move_up():
-            if not self.__engine.collision_detection(self.__tractor):
-                steps.append("U")
-            self.__tractor.move_down()
+        # todo add refill func
 
-        if self.__tractor.move_down():
-            if not self.__engine.collision_detection(self.__tractor):
-                steps.append("D")
-            self.__tractor.move_up()
+        # if self.__tractor.get_plants_held() == self.__plant_score_goal:
+        #     steps.append("e")
 
-        if self.__tractor.move_left():
-            if not self.__engine.collision_detection(self.__tractor):
-                steps.append("L")
-            self.__tractor.move_right()
+        steps = sorted(list(steps), key=lambda x: (not x.islower(), x))
 
-        if self.__tractor.move_right():
-            if not self.__engine.collision_detection(self.__tractor):
-                steps.append("R")
-            self.__tractor.move_left()
-
-        if not any(isinstance(sprite, Plant) for sprite in
-                   grid[self.__tractor.get_index_x()][self.__tractor.get_index_y()]):
-            try:
-                steps.remove("i")
-                steps.remove("f")
-                steps.remove("h")
-            except:
-                pass
-        else:
-            field = grid[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
-            index = 1
-
-            if isinstance(field[index], AbstractHarvestablePlants):
-                stage = field[index].get_grow_stage()
-                if stage == 0:
-                    try:
-                        steps.remove("f")
-                        steps.remove("h")
-                    except:
-                        pass
-                elif stage == 1:
-                    try:
-                        steps.remove("i")
-                        steps.remove("h")
-                    except:
-                        pass
-                elif stage == 2:
-                    try:
-                        steps.remove("i")
-                        steps.remove("f")
-                        steps.remove("h")
-                    except:
-                        pass
-                elif stage == 3:
-                    try:
-                        steps.remove("i")
-                        steps.remove("f")
-                    except:
-                        pass
-
-                if not field[index].has_warning_on("irrigation"):
-                    try:
-                        steps.remove("i")
-                    except:
-                        pass
-
-                if not field[index].has_warning_on("fertilizer"):
-                    try:
-                        steps.remove("f")
-                    except:
-                        pass
-
-        if self.__tractor.get_plants_held() != self.plant_score_goal:
-            try:
-                steps.remove("e")
-            except:
-                pass
-
-        if not self.__tractor.if_operation_possible("irrigation"):
-            try:
-                steps.remove("i")
-            except:
-                pass
-
-        if not self.__tractor.if_operation_possible("fertilizer"):
-            try:
-                steps.remove("f")
-            except:
-                pass
-
-        if self.__engine.refill_collision_detection(self.__tractor) != "WATER_CONTAINER":
-            try:
-                steps.remove("w")
-            except:
-                pass
-        else:
-            if not self.__tractor.if_refill_possible("irrigation"):
-                try:
-                    steps.remove("w")
-                    # todo optimize
-                except:
-                    pass
-
-        if self.__engine.refill_collision_detection(self.__tractor) != "BARN":
-            try:
-                steps.remove("e")
-            except:
-                pass
-            try:
-                steps.remove("b")
-            except:
-                pass
-        else:
-            if not self.__tractor.if_refill_possible("fertilizer"):
-                try:
-                    steps.remove("b")
-                except:
-                    pass
-
-        if not steps:
-            print(
-                "T posX: " + str(self.__tractor.get_index_x()) + " posY: " + str(
-                    self.__tractor.get_index_y()) + "\tPusta lista")
-
-            if last_step == "L":
-                steps.add("R")
-            elif last_step == "R":
-                steps.add("L")
-            elif last_step == "U":
-                steps.add("D")
-            elif last_step == "D":
-                steps.add("U")
-
-        new_steps = sorted(list(steps), key=lambda x: (not x.islower(), x))
         print("T posX: " + str(self.__tractor.get_index_x()) + " posY: " + str(self.__tractor.get_index_y()), end="\t")
-        print("New possible steps" + str(new_steps))
-        return new_steps
+        print("Possible steps: " + str(steps))
+
+        return steps
+
+    def __check_possible_plants(self, steps):
+        field = self.__map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
+        plant = field[-1]
+        stage = field[1].get_grow_stage()
+
+        if stage == 0:
+            if plant.has_warning_on("irrigation") \
+                    and self.__tractor.if_operation_possible("irrigation"):
+                steps.append("i")
+
+        elif stage == 1:
+            if plant.has_warning_on("fertilizer") \
+                    and self.__tractor.if_operation_possible("fertilizer"):
+                steps.append("f")
+
+        elif stage == 3:
+            steps.append("h")
+
+        if not {"i", "f", "h"} in steps:
+            steps.append("p")
+
+    def __update_tractor_position(self, movement):
+        print(str(self.step_counter) + ". Movement: " + movement)
+        self.step_counter += 1
+
+        if movement == "L":
+            self.__tractor.move_left()
+        elif movement == "R":
+            self.__tractor.move_right()
+        elif movement == "U":
+            self.__tractor.move_up()
+        elif movement == "D":
+            self.__tractor.move_down()
 
     def __update_map(self, step):
-        print(str(self.counter) + ". Movement: " + step)
-        self.counter += 1
 
-        if step == "L":
-            self.__tractor.move_left()
-        elif step == "R":
-            self.__tractor.move_right()
-        elif step == "U":
-            self.__tractor.move_up()
-        elif step == "D":
-            self.__tractor.move_down()
+        # print(str(self.step_counter) + ". Movement: " + step)
+        self.step_counter += 1
+
+        self.__update_tractor_position(step)
 
         if step == "i" or step == "f":
             self.__engine.do_things(self.__map, self.__tractor)
+
+        # if tractor stay next to plant and cannot irrigate/fertilize/harvest, sleeps for 1 sec
+        # if step == "p":
+        #     time.sleep(1)
+
         if step == "h":
             self.__engine.harvest_plants(self.__map, self.__tractor)
         if step == "e":
-            # for obj in self.__solid_sprite_group:
-            #     if isinstance(obj, Barn):
-            #         print(obj.get_rect())
 
             self.set_plant_score(
                 self.__engine.deliver_plants(self.__plant_score, self.__tractor)
@@ -459,20 +564,22 @@ class Dfs:
 
         if step == "w" or step == "b":
             self.__engine.refill_tractor(self.__tractor)
-            self.__engine.refill_tractor(self.__tractor)
 
     def update(self, step):
-        if (pygame.time.get_ticks() - self.__start_time) / 2 > 1:
-            self.__start_time = pygame.time.get_ticks()
-            game_map = self.__map
-            for fields in game_map:
-                for field in fields:
-                    for entity in field:
-                        if isinstance(entity, AbstractHarvestablePlants):
-                            entity.grow()
-                            entity.handle_warnings(True)
+        self.__update_map(step)
 
-        return self.__update_map(step)
+    def __update_plants(self, a, b):
+        while True:
+            if (pygame.time.get_ticks() - self.__start_time) / 1000 > 2:
+                self.__start_time = pygame.time.get_ticks()
+
+                for fields in self.__map:
+                    for field in fields:
+                        for entity in field:
+                            if isinstance(entity, AbstractHarvestablePlants):
+                                entity.grow()
+                                entity.handle_warnings(True)
+            time.sleep(1)
 
     def timer(self, a, b):
         while True:
