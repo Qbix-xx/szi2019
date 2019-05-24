@@ -43,23 +43,27 @@ class Dfs:
 
         # new var
         self.__paths_list = []
+        self.__plants_found = 0
 
     def reset_map(self):
         self.__map = self.__engine.init_map()
 
     def run(self):
-        while len(self.__dfs_solutions) < 2:
+        while len(self.__paths_list) < 2:
+        # while len(self.__dfs_solutions) < 2:
             print("--------------PATH " + str(self.__path_counter))
 
             self.dfs_find2()
             # self.dfs_find(0, [])
             self.reset_map()
             self.step_counter = 0
+            self.__plants_found = 0
 
             time.sleep(0.5 + 0.1 * self.__path_counter)
+
             self.__path_counter += 1
 
-        print(self.__dfs_solutions)
+        print(self.__paths_list)
 
     def dfs_find(self, plant_score, current_steps):
         if len(self.__dfs_solutions) == 2:  # todo change
@@ -127,13 +131,11 @@ class Dfs:
         self.__find_path(0, [])
         # find best
 
-    def __find_path_next_step(self, last_step):
+    def __find_path_next_step(self, plants_found, last_step):
         possible_steps = []
 
         # check possible movement
-        if last_step == "D":
-            pass
-        else:
+        if not last_step == "D":
             if self.__tractor.move_up():
                 if not self.__engine.collision_detection(self.__tractor):
                     if not possible_steps.__contains__("U"):
@@ -141,8 +143,6 @@ class Dfs:
                 self.__tractor.move_down()
 
         if not last_step == "U":
-            pass
-        else:
             if self.__tractor.move_down():
                 if not self.__engine.collision_detection(self.__tractor):
                     if not possible_steps.__contains__("D"):
@@ -167,31 +167,32 @@ class Dfs:
 
         if isinstance(field[-1], AbstractHarvestablePlants):
             possible_steps.append("p")
+            plants_found += 1
 
         possible_steps = sorted(list(possible_steps), key=lambda x: (not x.islower(), x))
 
         print("Possible steps: " + str(possible_steps))
 
-        return possible_steps
+        return (possible_steps, plants_found)
 
-    def __find_path(self, plant_score, path):
+    def __find_path(self, plants_found, path):
         if len(self.__paths_list) == 2:  # todo change
             print("break max __find_path")
             return True
 
-        if plant_score >= self.__plant_score_goal:
-            print("adding a new path")
-
-            # prevent from adding path which already exists
-            if not path in self.__paths_list:
-                self.__paths_list.append(path)
-            else:
-                print("abandon in adding the new path. path already exists")
-            return
-
         # prevent from reach out limit of recursion
         if len(path) > self.current_steps_limit:
             print("abandon in __find_path")
+            return
+
+        if plants_found >= self.__plant_score_goal:
+            print("adding a new path")
+            # self.__plants_found -= 1
+            # prevent from adding path which already exists
+            if not path in self.__paths_list:
+                self.__paths_list.append(copy.copy(path))
+            else:
+                print("abandon in adding the new path. path already exists")
             return
 
         if len(path) == 0:
@@ -199,46 +200,52 @@ class Dfs:
         else:
             s = path[-1]  # last step
 
-        for step in self.__find_path_next_step(s):
+        tmp_var = self.__find_path_next_step(plants_found, s)
+
+        for step in tmp_var[0]:
 
             # if steps' list is empty, ends path
             if not step:
                 return False
 
-            # if len(self.__dfs_solutions) == 2:  # todo change
-            #     return True
+            path.append(step)
+
+            if tmp_var[1] >= self.__plant_score_goal:
+                print("adding a new path")
+                # self.__plants_found -= 1
+                # prevent from adding path which already exists
+                if not path in self.__paths_list:
+                    self.__paths_list.append(copy.copy(path))
+                else:
+                    print("abandon in adding the new path. path already exists")
+                return
+
 
             tractor_last_position = copy.deepcopy(self.__tractor.get_position())
             self.update(step)
 
-            # if step == "p":
-            #     if self.__wait_flag:
-            #     time.sleep(1)
-            #         self.__wait_flag = False
-            #     if current_steps[-1] == "p":
-            #         current_steps.remove("p")
 
-            path.append(step)
-
-            if self.__plant_score == self.__plant_score_goal:
-                tmp_current_steps = copy.deepcopy(path)
-                self.__dfs_solutions.append(tmp_current_steps)
-                print("adding to solutions in")
-                self.__plant_score = 0
-                break
-
-            # if step == "i" or step == "f":
-            #     time.sleep(1)
+            # if plant_score >= self.__plant_score_goal:
+            #     print("adding a new path")
+            #
+            #     # prevent from adding path which already exists
+            #     if not path in self.__paths_list:
+            #         self.__paths_list.append(path)
+            #     else:
+            #         print("abandon in adding the new path. path already exists")
+            #     return
 
             if len(path) > self.current_steps_limit:
                 print("abandon in possible_steps")
                 break
 
-            tmp_flag = self.__find_path(plant_score, path)
-            if tmp_flag is None:
-                del path[-1]
-                # undo movement
-                self.__tractor.set_position(tractor_last_position)
+            self.__find_path(tmp_var[1] , path)
+            # tmp_flag = self.__find_path(plant_score, path)
+            # if tmp_flag is None:
+            del path[-1]
+
+            #     undo movement
+            self.__tractor.set_position(tractor_last_position)
 
     def possible_steps(self, last_step):
         steps = {"L", "R", "U", "D", "i", "f", "h", "e", "b", "w"}
