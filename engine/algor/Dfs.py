@@ -49,7 +49,7 @@ class Dfs:
         self.__map = self.__engine.init_map()
 
     def run(self):
-        while len(self.__paths_list) < 2:
+        while len(self.__paths_list) < 1:
         # while len(self.__dfs_solutions) < 2:
             print("--------------PATH " + str(self.__path_counter))
 
@@ -169,7 +169,7 @@ class Dfs:
             if not field[-1].get_found():
                 field[-1].set_found_true()
                 plants_found += 1
-            self.__check_possible_plants(possible_steps)
+                possible_steps.append("p")
 
         possible_steps = sorted(list(possible_steps), key=lambda x: (not x.islower(), x))
 
@@ -558,8 +558,8 @@ class Dfs:
             self.__engine.do_things(self.__map, self.__tractor)
 
         # if tractor stay next to plant and cannot irrigate/fertilize/harvest, sleeps for 1 sec
-        if step == "p":
-            time.sleep(1)
+        # if step == "p":
+        #      time.sleep(1)
 
         if step == "h":
             self.__engine.harvest_plants(self.__map, self.__tractor)
