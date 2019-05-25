@@ -13,7 +13,7 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
         self.__current_clean_image = None
         self.__grow_stage = 0
         self.__max_grow_stage = 3
-
+        self.__found = False
         # todo for this stats dict was created
         self.__last_stage_growth = 0  # goes from 100 to 0 on stage 2 before getting to the last stage
 
@@ -174,3 +174,9 @@ class AbstractHarvestablePlants(AbstractEntities, AbstractHarvestableInterface, 
 
     def has_warning_on(self, stat):
             return self.get_stats().get(stat)["warning"]
+
+    def set_found_true(self):
+        self.__found = True
+
+    def get_found(self):
+        return self.__found

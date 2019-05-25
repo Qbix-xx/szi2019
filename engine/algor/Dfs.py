@@ -166,8 +166,10 @@ class Dfs:
         field = self.__map[self.__tractor.get_index_x()][self.__tractor.get_index_y()]
 
         if isinstance(field[-1], AbstractHarvestablePlants):
-            possible_steps.append("p")
-            plants_found += 1
+            if not field[-1].get_found():
+                possible_steps.append("p")
+                field[-1].set_found()
+                plants_found += 1
 
         possible_steps = sorted(list(possible_steps), key=lambda x: (not x.islower(), x))
 
@@ -220,10 +222,8 @@ class Dfs:
                     print("abandon in adding the new path. path already exists")
                 return
 
-
             tractor_last_position = copy.deepcopy(self.__tractor.get_position())
             self.update(step)
-
 
             # if plant_score >= self.__plant_score_goal:
             #     print("adding a new path")
