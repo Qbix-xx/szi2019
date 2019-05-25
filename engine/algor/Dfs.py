@@ -167,15 +167,15 @@ class Dfs:
 
         if isinstance(field[-1], AbstractHarvestablePlants):
             if not field[-1].get_found():
-                possible_steps.append("p")
                 field[-1].set_found_true()
                 plants_found += 1
+            self.__check_possible_plants(possible_steps)
 
         possible_steps = sorted(list(possible_steps), key=lambda x: (not x.islower(), x))
 
         print("Possible steps: " + str(possible_steps))
 
-        return (possible_steps, plants_found)
+        return possible_steps, plants_found
 
     def __find_path(self, plants_found, path):
         if len(self.__paths_list) == 2:  # todo change
@@ -558,8 +558,8 @@ class Dfs:
             self.__engine.do_things(self.__map, self.__tractor)
 
         # if tractor stay next to plant and cannot irrigate/fertilize/harvest, sleeps for 1 sec
-        # if step == "p":
-        #     time.sleep(1)
+        if step == "p":
+            time.sleep(1)
 
         if step == "h":
             self.__engine.harvest_plants(self.__map, self.__tractor)
@@ -598,3 +598,25 @@ class Dfs:
 
     def set_plant_score(self, plant_score):
         self.__plant_score = plant_score
+
+    def trim_and_reverse_path(self, path):
+        start = next((i for i, step in enumerate(path) if step == "i" or step == "f"), None)
+
+        # delete the part where tractor went from starting point to the first plant
+        del path[:start]
+
+        path.reverse()
+
+        for index, step in enumerate(path):
+            if path[index] == "U":
+                path[index] = "D"
+            elif path[index] == "D":
+                path[index] = "U"
+            elif path[index] == "L":
+                path[index] = "R"
+            elif path[index] == "R":
+                path[index] = "L"
+            elif path[index] == "i":
+                path[index] = "f"
+            elif path[index] == "f":
+                path[index] = "h"
