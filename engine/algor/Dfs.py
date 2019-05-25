@@ -168,7 +168,7 @@ class Dfs:
         if isinstance(field[-1], AbstractHarvestablePlants):
             if not field[-1].get_found():
                 possible_steps.append("p")
-                field[-1].set_found()
+                field[-1].set_found_true()
                 plants_found += 1
 
         possible_steps = sorted(list(possible_steps), key=lambda x: (not x.islower(), x))
