@@ -1,5 +1,3 @@
-# import threading
-# import dummy_threading as threading
 import _thread as threading
 import time
 
@@ -10,14 +8,13 @@ from engine.Engine import Engine
 pygame.init()
 pygame.font.init()
 
-# TODO create config
 # -------editables-------
 FPS = 30
 # PATH_TO_MAP = "resources/map_layouts/dfs_test.txt"
 # PATH_TO_MAP = "resources/map_layouts/layout2.txt"
 DEFAULT_MAP = "dfs_test.txt"
 DEFAULT_MAP_SIZE = 15      # in tiles
-WINDOW_SIZE = (DEFAULT_MAP_SIZE * 33 + 450 , DEFAULT_MAP_SIZE * 33 + 300)
+WINDOW_SIZE = (DEFAULT_MAP_SIZE * 33 + 450, DEFAULT_MAP_SIZE * 33 + 300)
 # -----------------------
 
 # screen handle
@@ -34,14 +31,17 @@ engine = Engine(DEFAULT_MAP)
 def timer(a, b):
     while True:
         if engine.get_pause_flag():
-            time.sleep(2)
+            time.sleep(0)
             engine.set_pause_flag(False)
 
 
 timer_thread = threading.start_new_thread(timer, (0, 0))
+# plants_update_thread = threading.start_new_thread(self.__update_plants, (0, 0))
+
+# todo add update thread asap
 
 while True:
-    # # handle keyboard input
+    # handle keyboard input
     engine.handle_keyboard()
 
     # update sprites

@@ -16,9 +16,8 @@ class MapManager:
             map_name = self.default_map_name
         with open(os.path.join(self.maps_path, map_name)) as f:
             self.__current_map_layout = list(line.replace('\n', '').split(" ") for line in f)
-        size = len(self.__current_map_layout)
         self.__current_map_name = map_name
-        self.__current_map_size = size
+        self.__current_map_size = len(self.__current_map_layout)
 
     def get_map_name(self):
         return self.__current_map_name
