@@ -11,18 +11,12 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
     def __init__(self, map_size):
         pygame.sprite.Sprite.__init__(self)
         AbstractHarvestableInterface.__init__(self)
-
         self.__map_size = map_size
         self.__spritesheet = {}
-
         self.__init_spritesheet()
-
         self.image = self.__spritesheet["right"]
-
         self.rect = self.image.get_rect()
-
         self.__plants_held = 0
-        # self.__inventory_size = 3
 
         # starting position default is [1,1] - upper left corner of map
         self.set_rect_by_index((1, 1))

@@ -58,13 +58,13 @@ class Engine:
                   self.__plant_score_goal,
                   self.__tractor)
 
-        path = dfs.run()
+        path = dfs.run(self.__tractor)
         self.auto_movement(path)
 
     def auto_movement(self, path):
         step_counter = 0
         for step in path:
-            print(step_counter)
+            print(str(step_counter) + ". ", end='')
             update_tractor_position(step, self.__tractor)
             self.render()
             pygame.display.flip()
@@ -147,6 +147,8 @@ class Engine:
                     self.__tractor.move_up()
                     if collision_detection(self.__tractor, self.__solid_sprite_group):
                         self.__tractor.move_down()
+
+                print(self.__tractor.get_position())
 
                 if event.key == K_f:
                     self.do_things(self.__game_map, self.__tractor)
