@@ -28,9 +28,8 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
         self.set_rect_by_index((1, 1))
 
         # position in map matrix
-        self.__index_x = int((self.rect.x - 32) / 32)
-        self.__index_y = int((self.rect.y - 32) / 32)
-        # self.__index = (self.__index_x, self.__index_y)
+        self.__index_x = 1
+        self.__index_y = 1
 
         # 1 is needed because of additional lines between grid
         self.__step = 32 + 1
@@ -77,18 +76,17 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
     def get_index_y(self):
         return self.__index_y
 
-    def set_index_x(self, newX):
-        self.__index_x = newX
+    def set_index_x(self, x):
+        self.__index_x = x
 
-    def set_index_y(self, newY):
-        self.__index_y = newY
+    def set_index_y(self, y):
+        self.__index_y = y
 
     def set_rect_by_index(self, rect):
         self.rect.x = rect[0] * 33 + 33
+        self.__index_x = rect[0]
         self.rect.y = rect[1] * 33 + 33
-
-    def set_rect(self, rect):
-        self.rect = rect
+        self.__index_y = rect[1]
 
     def move_right(self):
         self.image = self.__spritesheet["right"]
