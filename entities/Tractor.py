@@ -64,6 +64,9 @@ class Tractor(Sprite, AbstractHarvestableInterface, ABC):
 
         self.set_stats(stats)
 
+    def get_index(self):
+        return self.__index_x, self.__index_y
+
     def get_index_x(self):
         return self.__index_x
 

@@ -58,7 +58,7 @@ class Engine:
                   self.__plant_score_goal,
                   self.__tractor)
 
-        path = dfs.run(self.__tractor)
+        path = dfs.run()
         self.auto_movement(path)
 
     def auto_movement(self, path):
