@@ -4,40 +4,32 @@ import time
 import pygame
 
 from engine.Engine import Engine
+from engine.GUI import GUI
 
 pygame.init()
 pygame.font.init()
 
 # -------editables-------
 FPS = 30
-# PATH_TO_MAP = "resources/map_layouts/dfs_test.txt"
-# PATH_TO_MAP = "resources/map_layouts/layout2.txt"
-DEFAULT_MAP = "dfs_test.txt"
+# MAP = "layout3_dev.txt"
 DEFAULT_MAP_SIZE = 15      # in tiles
 WINDOW_SIZE = (DEFAULT_MAP_SIZE * 33 + 450, DEFAULT_MAP_SIZE * 33 + 300)
 # -----------------------
 
 # screen handle
-hScreen = pygame.display.set_mode(WINDOW_SIZE)
+engine = Engine(WINDOW_SIZE)
+# engine = Engine(MAP, WINDOW_SIZE)
+# hScreen = pygame.display.set_mode(WINDOW_SIZE)
 
 pygame.display.set_caption('Czerwony ciągnik')
 
 fpsClock = pygame.time.Clock()
 
 # create and init game engine
-engine = Engine(DEFAULT_MAP)
+# engine.set_hScreen(hScreen)
 
-
-def timer(a, b):
-    while True:
-        if engine.get_pause_flag():
-            time.sleep(0)
-            engine.set_pause_flag(False)
-
-
-timer_thread = threading.start_new_thread(timer, (0, 0))
 # plants_update_thread = threading.start_new_thread(self.__update_plants, (0, 0))
-
+# render_thread = threading.start_new_thread(render, (0, 0))
 # todo add update thread asap
 
 while True:
@@ -48,7 +40,7 @@ while True:
     engine.update()
 
     # render game
-    engine.render(hScreen)
+    engine.render()
 
     # draw everything from buffer on screen
     pygame.display.flip()
