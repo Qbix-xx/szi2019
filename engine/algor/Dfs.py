@@ -22,6 +22,7 @@ class Dfs:
         self.__start_time = pygame.time.get_ticks()
         self.__game_map = game_map
         self.__paths_list = []
+        self.__visited_nodes = []
 
     def run(self, tractor: Tractor):
         self.find_path(tractor)
@@ -53,12 +54,19 @@ class Dfs:
 
         return best_path
 
-    def find_path(self, tractor: Tractor, step_counter=0, plants_found=0, path=None):
+    def find_path(self, tractor: Tractor, step_counter=0, plants_found=0, path=None, plants_found_list=None,
+                  visited_nodes=None):
 
         if path is None:
             path = []
 
-        possible_steps = self.__find_path_next_step(tractor, plants_found, path)
+        if plants_found_list is None:
+            plants_found_list = []
+
+        if visited_nodes is None:
+            visited_nodes = []
+
+        possible_steps = self.__find_path_next_step(tractor, plants_found, path, plants_found_list)
 
         for step in possible_steps:
 
@@ -71,16 +79,48 @@ class Dfs:
 
             path.append(step)
             tractor_position_copy = copy.deepcopy(self.__tractor.get_position())
-            step_counter = self.__update(step, step_counter, tractor)
+            step_counter = self.__update(step, step_counter, tractor, visited_nodes)
 
-            if plants_found == self.__plant_score_goal:
+            # if plants_found == self.__plant_score_goal:
+            #     self.__paths_list.append(copy.deepcopy(path))
+            #     print("Adding path: " + str(path))
+            #     # plants_found -= 1
+            #     del path[-1]
+            #
+            #     return
+
+            if step_counter % 4 == 0:
+                path_length = len(path)
+                current_pos = visited_nodes[-1]
+                pos_to_check = visited_nodes[path_length - 4]
+
+                if current_pos == pos_to_check:
+                    # pos_to_check = visited_nodes[path_length - 2]
+
+                    # if
+                    del path[-1]
+                    del visited_nodes[-1]
+                    step_counter -= 1
+                    print("found loop in path")
+                    continue
+
+            if path.count("p") == self.__plant_score_goal:
                 self.__paths_list.append(copy.deepcopy(path))
+                print("Adding path: " + str(path))
+                # plants_found -= 1
+                del plants_found_list[-1]
                 del path[-1]
+                del visited_nodes[-1]
 
                 return
 
-            self.find_path(tractor, step_counter, plants_found, path)
+            self.find_path(tractor, step_counter, plants_found, path, plants_found_list, visited_nodes)
+
+            if step == "p":
+                del plants_found_list[-1]
+
             del path[-1]
+            del visited_nodes[-1]
             tractor.set_position(tractor_position_copy)
 
     @staticmethod
@@ -103,7 +143,7 @@ class Dfs:
 
         return flag
 
-    def __find_path_next_step(self, tractor, plants_found, path):
+    def __find_path_next_step(self, tractor, plants_found, path, plants_found_list):
         possible_steps = []
 
         # check possible movement
@@ -130,18 +170,28 @@ class Dfs:
         field = self.__game_map[tractor.get_index_x()][tractor.get_index_y()]
 
         if isinstance(field[-1], AbstractHarvestablePlants) and len(path) > 0:
+            if field[-1] not in plants_found_list:
                 if path[-1] != "p":
                     possible_steps.append("p")
                     plants_found += 1
+                    plants_found_list.append(field[-1])
 
         possible_steps = sorted(list(possible_steps), key=lambda x: (not x.islower(), x))
 
+        print("Actual path: " + str(path))
         print("Possible steps: " + str(possible_steps) + " plants found: " + str(plants_found))
 
         return possible_steps
 
-    def __update(self, step, step_counter, tractor: Tractor):
-        print(step_counter)
+    def __update(self, step, step_counter, tractor: Tractor, visited_nodes):
+        print("Step number: " + str(step_counter))
+        print("-----------------------")
         update_tractor_position(step, tractor)
-        step_counter += 1
+
+        # todo dev
+        visited_nodes.append((tractor.get_index_x(), tractor.get_index_y()))
+
+        if step != "p":
+            step_counter += 1
+
         return step_counter

@@ -148,8 +148,6 @@ class Engine:
                     if collision_detection(self.__tractor, self.__solid_sprite_group):
                         self.__tractor.move_down()
 
-                print(self.__tractor.get_position())
-
                 if event.key == K_f:
                     self.do_things(self.__game_map, self.__tractor)
                 elif event.key == K_SPACE:
