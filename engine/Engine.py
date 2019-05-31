@@ -72,8 +72,11 @@ class Engine:
         final_path.extend(self.trim_and_reverse_path(path).copy())
         final_path.extend(self.trim_and_reverse_path(path).copy())
         # TODO
-        # first_plant_index = next((i for i, step in enumerate(path) if step == "i"), None)
-        # final_path[first_plant_index] = wait for the first plant to get irrigation warning (p, ..., p, i)
+        # first_irrigation = next((i for i, step in enumerate(path) if step == "i"), None)
+        # first_fertilize = next((i for i, step in enumerate(path) if step == "f"), None)
+        # first_harvest = next((i for i, step in enumerate(path) if step == "f"), None)
+
+        # final_path[first_xxxxxxx] = add waiting for the plant to get ready for "i" / "f" / "h"
         # add (go back to the barn and deliver plants) part at the end of final_path
         return final_path
 
