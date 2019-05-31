@@ -59,7 +59,47 @@ class Engine:
                   self.__tractor)
 
         path = dfs.run()
-        self.auto_movement(path)
+        final_path = self.adjust_and_expand_path(path)
+        print("Final path: ", final_path)
+        self.auto_movement(final_path)
+
+    def adjust_and_expand_path(self, path):
+        for index, step in enumerate(path):
+            if path[index] == "p":
+                path[index] = "i"
+
+        final_path = path.copy()
+        final_path.extend(self.trim_and_reverse_path(path).copy())
+        final_path.extend(self.trim_and_reverse_path(path).copy())
+        # TODO
+        # first_plant_index = next((i for i, step in enumerate(path) if step == "i"), None)
+        # final_path[first_plant_index] = wait for the first plant to get irrigation warning (p, ..., p, i)
+        # add (go back to the barn and deliver plants) part at the end of final_path
+        return final_path
+
+    def trim_and_reverse_path(self, path):
+        start = next((i for i, step in enumerate(path) if step == "i" or step == "f"), None)
+
+        # delete the part where tractor goes from starting point to the first plant
+        del path[:start]
+
+        path.reverse()
+
+        for index, step in enumerate(path):
+            if path[index] == "U":
+                path[index] = "D"
+            elif path[index] == "D":
+                path[index] = "U"
+            elif path[index] == "L":
+                path[index] = "R"
+            elif path[index] == "R":
+                path[index] = "L"
+            elif path[index] == "i":
+                path[index] = "f"
+            elif path[index] == "f":
+                path[index] = "h"
+
+        return path
 
     def auto_movement(self, path):
         step_counter = 0
