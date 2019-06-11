@@ -63,6 +63,46 @@ class Engine:
         print("Final path: ", final_path)
         self.auto_movement(final_path)
 
+    def get_vw_entries_from_path(self, path):
+        grid = MapManager.get_map_layout(self.__map_manager)
+        for i, el_i in enumerate(grid):
+            for j, el_j in enumerate(el_i):
+                if el_j == "2":
+                    tractor_starting_x = i
+                    tractor_starting_y = j
+        current_position_x = tractor_starting_x
+        current_position_y = tractor_starting_y
+        vw_entries = []
+        for step in path:
+            if step == "i" or step == "f" or step == "h":
+                pass
+            else:
+                surroundings = []
+                start_x = current_position_x-2
+                start_y = current_position_y-2
+                if current_position_x < 2:
+                    start_x = 0
+                if current_position_y < 2:
+                    start_y = 0
+                temp = []
+                for i in range(start_x, current_position_x+3):
+                    for j in range(start_y, current_position_y+3):
+                        surroundings.append(grid[i][j])
+                for index, el in enumerate(surroundings):
+                    if el == "2":
+                        surroundings[index] = "0"
+                final_entry = [step, surroundings]
+                vw_entries.append(final_entry)
+                if step == "U":
+                    current_position_y -= 1
+                elif step == "D":
+                    current_position_y += 1
+                elif step == "L":
+                    current_position_x -= 1
+                elif step == "R":
+                    current_position_x += 1
+        return vw_entries
+
     def adjust_and_expand_path(self, path):
         for index, step in enumerate(path):
             if path[index] == "p":
@@ -108,6 +148,9 @@ class Engine:
         step_counter = 0
         for step in path:
             print(str(step_counter) + ". ", end='')
+
+            print(self.get_vw_entries_from_path(path))
+
             update_tractor_position(step, self.__tractor)
             self.render()
             pygame.display.flip()
