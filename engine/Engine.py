@@ -77,22 +77,25 @@ class Engine:
             if step == "i" or step == "f" or step == "h":
                 pass
             else:
-                surroundings = []
+                surroundings = [[None for x in range(5)] for y in range(5)]
                 start_x = current_position_x-2
                 start_y = current_position_y-2
+                offset_x = 0
+                offset_y = 0
                 if current_position_x < 2:
                     start_x = 0
+                    offset_x = abs(current_position_x - start_x)
                 if current_position_y < 2:
                     start_y = 0
-                temp = []
+                    offset_y = abs(current_position_y - start_y)
+
                 for i in range(start_x, current_position_x+3):
                     for j in range(start_y, current_position_y+3):
-                        surroundings.append(grid[i][j])
+                        surroundings[min(4, j+offset_y-start_y)][min(4, i+offset_x-start_x)] = (grid[i][j])
                 for index, el in enumerate(surroundings):
                     if el == "2":
                         surroundings[index] = "0"
-                final_entry = [step, surroundings]
-                vw_entries.append(final_entry)
+                vw_entries.append([step, surroundings])
                 if step == "U":
                     current_position_y -= 1
                 elif step == "D":
@@ -101,6 +104,14 @@ class Engine:
                     current_position_x -= 1
                 elif step == "R":
                     current_position_x += 1
+        f = open("vw_entries.txt", "w+")
+        for entry in vw_entries:
+            f.write("%s |" % entry[0])
+            for row in range(5):
+                for column in range(5):
+                    f.write(" c%d%d:%s" % (column, row, entry[1][column][row]))
+            f.write("\r\n")
+        f.close()
         return vw_entries
 
     def adjust_and_expand_path(self, path):
@@ -146,11 +157,9 @@ class Engine:
 
     def auto_movement(self, path):
         step_counter = 0
+        self.get_vw_entries_from_path(path)
         for step in path:
             print(str(step_counter) + ". ", end='')
-
-            print(self.get_vw_entries_from_path(path))
-
             update_tractor_position(step, self.__tractor)
             self.render()
             pygame.display.flip()
